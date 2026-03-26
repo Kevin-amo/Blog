@@ -1,0 +1,50 @@
+package blog.entity;
+
+import lombok.Data;
+
+import java.time.LocalDateTime;
+
+/**
+ * @author admin
+ * 用户实体类 sys_user表
+ */
+@Data
+public class User {
+
+    /**
+     * id
+     */
+    private Long id;
+
+    /**
+     * 用户名
+     */
+    private String username;
+
+    /**
+     * 密码
+     * TODO 后续加密
+     */
+    private String password;
+
+    /**
+     * 昵称
+     */
+    private String nickname;
+
+    /**
+     * 状态(1启用0禁用)
+     */
+    private Integer status;
+
+    /**
+     * 创建时间
+     */
+    private LocalDateTime createTime;
+
+    /**
+     * 更新时间
+     */
+    private LocalDateTime updateTime;
+
+}
