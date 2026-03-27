@@ -4,15 +4,10 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="blog.mapper.ArticleMapper">
 
-    <!--公共查询字段-->
     <sql id="base_column_list">id, title, summary, content, cover_url, category_id, status, is_top,
         view_count, comment_count, create_by, create_time, update_by, update_time, is_deleted
     </sql>
 
-    <!--
-        新增文章
-        useGeneratedKeys="true" 表示回填主键到 article.id
-    -->
     <insert id="insert" parameterType="blog.entity.po.Article"
             useGeneratedKeys="true" keyProperty="id">
         INSERT INTO article (title, summary, content, cover_url, category_id, status, is_top,
@@ -21,17 +16,12 @@
                 #{viewCount}, #{commentCount}, #{createBy}, #{createTime}, #{updateBy}, #{updateTime}, #{isDeleted})
     </insert>
 
-    <!--
-    查询当前登录用户自己的文章列表
-    支持标题、状态、分类筛选
-    排序规则：置顶优先，然后按创建时间倒序
-    -->
     <select id="selectList" resultType="blog.entity.po.Article">
         SELECT
         <include refid="base_column_list"/>
         FROM article
         WHERE is_deleted = 0
-        AND create_by = #{currentUserId}
+          AND create_by = #{currentUserId}
         <if test="queryDTO != null">
             <if test="queryDTO.title != null and queryDTO.title != ''">
                 AND title LIKE CONCAT('%', #{queryDTO.title}, '%')
@@ -46,20 +36,41 @@
         ORDER BY is_top DESC, create_time DESC
     </select>
 
-    <!--查询当前登录用户自己的文章详情-->
+    <select id="selectPublishedList" resultType="blog.entity.po.Article">
+        SELECT
+        <include refid="base_column_list"/>
+        FROM article
+        WHERE is_deleted = 0
+          AND status = 1
+        <if test="queryDTO != null">
+            <if test="queryDTO.title != null and queryDTO.title != ''">
+                AND title LIKE CONCAT('%', #{queryDTO.title}, '%')
+            </if>
+            <if test="queryDTO.categoryId != null">
+                AND category_id = #{queryDTO.categoryId}
+            </if>
+        </if>
+        ORDER BY is_top DESC, create_time DESC
+    </select>
+
     <select id="selectByIdAndCreateBy" resultType="blog.entity.po.Article">
         SELECT
         <include refid="base_column_list"/>
         FROM article
         WHERE id = #{id}
-        AND create_by = #{currentUserId}
-        AND is_deleted = 0
+          AND create_by = #{currentUserId}
+          AND is_deleted = 0
     </select>
 
-    <!--
-        修改文章
-        只允许修改当前用户自己的文章
-    -->
+    <select id="selectPublishedById" resultType="blog.entity.po.Article">
+        SELECT
+        <include refid="base_column_list"/>
+        FROM article
+        WHERE id = #{id}
+          AND is_deleted = 0
+          AND status = 1
+    </select>
+
     <update id="updateByIdAndCreateBy">
         UPDATE article
         <set>
@@ -74,11 +85,10 @@
             update_time = #{article.updateTime}
         </set>
         WHERE id = #{article.id}
-        AND create_by = #{currentUserId}
-        AND is_deleted = 0
+          AND create_by = #{currentUserId}
+          AND is_deleted = 0
     </update>
 
-    <!--逻辑删除文章-->
     <update id="deleteByIdAndCreateBy">
         UPDATE article
         SET is_deleted  = 1,
@@ -89,15 +99,13 @@
           AND is_deleted = 0
     </update>
 
-    <!-- 统计某个分类下的文章数 -->
     <select id="countByCategoryId" resultType="java.lang.Integer">
         select count(*)
         from article
         where category_id = #{categoryId}
-        and is_deleted = 0
+          and is_deleted = 0
     </select>
 
-    <!-- 分页查询 -->
     <select id="selectPage" resultType="blog.entity.vo.ArticlePageVO">
         SELECT a.id,
                a.title,
@@ -109,10 +117,10 @@
                a.is_top,
                a.create_time
         FROM article a
-        LEFT JOIN category c ON a.category_id = c.id
+                 LEFT JOIN category c ON a.category_id = c.id
         WHERE a.is_deleted = 0
-        AND c.is_deleted = 0
-        AND a.create_by = #{currentUserId}
+          AND c.is_deleted = 0
+          AND a.create_by = #{currentUserId}
         <if test="queryDTO != null and queryDTO.title != null and queryDTO.title != ''">
             AND a.title LIKE CONCAT('%', #{queryDTO.title}, '%')
         </if>

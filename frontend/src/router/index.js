@@ -1,12 +1,14 @@
 import { createRouter, createWebHistory } from "vue-router";
 import LoginView from "../views/LoginView.vue";
 import HomeView from "../views/HomeView.vue";
+import PublicBlogView from "../views/PublicBlogView.vue";
 import { getToken } from "../utils/auth";
 
 const routes = [
   {
     path: "/",
-    redirect: "/home"
+    name: "blog",
+    component: PublicBlogView
   },
   {
     path: "/login",
@@ -16,7 +18,11 @@ const routes = [
   },
   {
     path: "/home",
-    name: "home",
+    redirect: "/admin"
+  },
+  {
+    path: "/admin",
+    name: "admin",
     component: HomeView,
     meta: { requiresAuth: true }
   }
@@ -33,7 +39,7 @@ router.beforeEach((to) => {
     return "/login";
   }
   if (to.meta.guestOnly && token) {
-    return "/home";
+    return "/admin";
   }
   return true;
 });

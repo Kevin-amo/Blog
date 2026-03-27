@@ -97,7 +97,7 @@ async function handleLogin() {
       nickname: res.data.nickname
     });
 
-    router.push("/home");
+    router.push("/admin");
   } catch (error) {
     errorMsg.value =
       error.response?.data?.message || error.message || "网络异常，请稍后重试";

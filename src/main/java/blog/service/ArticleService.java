@@ -31,12 +31,28 @@ public interface ArticleService {
     List<ArticleVO> list(ArticleQueryDTO queryDTO);
 
     /**
+     * 查询公开的已发布文章列表（游客可访问）
+     *
+     * @param queryDTO 查询条件
+     * @return 文章列表
+     */
+    List<ArticleVO> listPublished(ArticleQueryDTO queryDTO);
+
+    /**
      * 查询文章详情
      *
      * @param id 文章ID
      * @return 文章详情
      */
     ArticleVO detail(Long id);
+
+    /**
+     * 查询公开的已发布文章详情（游客可访问）
+     *
+     * @param id 文章ID
+     * @return 文章详情
+     */
+    ArticleVO detailPublished(Long id);
 
     /**
      * 修改文章

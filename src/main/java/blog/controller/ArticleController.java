@@ -49,6 +49,17 @@ public class ArticleController {
     }
 
     /**
+     * 公开文章列表（游客可访问）
+     *
+     * @param queryDTO 查询参数
+     * @return 已发布文章
+     */
+    @GetMapping("/public/list")
+    public Result<List<ArticleVO>> publicList(ArticleQueryDTO queryDTO) {
+        return Result.success(articleService.listPublished(queryDTO));
+    }
+
+    /**
      * 文章详情
      *
      * @param id 文章id
@@ -57,6 +68,17 @@ public class ArticleController {
     @GetMapping("/{id}")
     public Result<ArticleVO> detail(@PathVariable Long id) {
         return Result.success(articleService.detail(id));
+    }
+
+    /**
+     * 公开文章详情（游客可访问）
+     *
+     * @param id 文章id
+     * @return 已发布文章详情
+     */
+    @GetMapping("/public/{id}")
+    public Result<ArticleVO> publicDetail(@PathVariable Long id) {
+        return Result.success(articleService.detailPublished(id));
     }
 
     /**

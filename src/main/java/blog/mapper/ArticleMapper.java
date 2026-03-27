@@ -30,6 +30,14 @@ public interface ArticleMapper {
                             @Param("currentUserId") Long currentUserId);
 
     /**
+     * 查询公开已发布文章列表
+     *
+     * @param queryDTO 查询条件
+     * @return 文章列表
+     */
+    List<Article> selectPublishedList(@Param("queryDTO") ArticleQueryDTO queryDTO);
+
+    /**
      * 根据文章ID和当前用户ID查询文章详情
      *
      * @param id 文章ID
@@ -37,6 +45,14 @@ public interface ArticleMapper {
      * @return 文章详情
      */
     Article selectByIdAndCreateBy(@Param("id") Long id, @Param("currentUserId") Long currentUserId);
+
+    /**
+     * 根据文章ID查询公开已发布文章详情
+     *
+     * @param id 文章ID
+     * @return 文章详情
+     */
+    Article selectPublishedById(@Param("id") Long id);
 
     /**
      * 根据文章ID和当前用户ID修改文章
