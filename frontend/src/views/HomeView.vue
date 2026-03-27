@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <main class="home-page article-home-page">
     <header class="topbar">
       <div>
@@ -257,89 +257,6 @@
       </section>
     </template>
 
-    <div v-if="showArticleEditor" class="modal-mask" @click.self="closeArticleEditor">
-      <section class="modal-card">
-        <div class="modal-head">
-          <h3>{{ editingArticleId ? "编辑文章" : "创建文章" }}</h3>
-          <button class="link-btn" type="button" @click="closeArticleEditor">关闭</button>
-        </div>
-
-        <form class="editor-form" @submit.prevent="submitArticle">
-          <label>
-            标题
-            <input v-model.trim="articleEditor.title" type="text" placeholder="请输入文章标题" maxlength="100" />
-          </label>
-
-          <label>
-            摘要
-            <textarea
-              v-model.trim="articleEditor.summary"
-              rows="2"
-              placeholder="一句话概括这篇文章（可选）"
-              maxlength="200"
-            ></textarea>
-          </label>
-
-          <label>
-            内容
-            <textarea
-              v-model.trim="articleEditor.content"
-              rows="8"
-              placeholder="请输入正文内容"
-            ></textarea>
-          </label>
-
-          <div class="editor-grid">
-            <label>
-              分类
-              <div class="select-shell">
-                <select v-model="articleEditor.categoryId" class="select-control">
-                  <option value="">请选择分类</option>
-                  <option v-for="item in categoryOptions" :key="item.id" :value="String(item.id)">
-                    {{ item.name }}
-                  </option>
-                </select>
-              </div>
-            </label>
-
-            <label>
-              状态
-              <div class="select-shell">
-                <select v-model="articleEditor.status" class="select-control">
-                  <option value="0">草稿</option>
-                  <option value="1">已发布</option>
-                </select>
-              </div>
-            </label>
-
-            <label>
-              是否置顶
-              <div class="select-shell">
-                <select v-model="articleEditor.isTop" class="select-control">
-                  <option value="0">否</option>
-                  <option value="1">是</option>
-                </select>
-              </div>
-            </label>
-          </div>
-
-          <label>
-            封面URL
-            <input v-model.trim="articleEditor.coverUrl" type="text" placeholder="可选，如 https://..." />
-          </label>
-
-          <p v-if="articleEditorError" class="error-msg">{{ articleEditorError }}</p>
-
-          <div class="editor-actions">
-            <button class="ghost-btn" type="button" @click="closeArticleEditor">取消</button>
-            <button class="submit-btn" type="submit" :disabled="savingArticle">
-              {{ savingArticle ? "提交中..." : editingArticleId ? "保存修改" : "创建文章" }}
-            </button>
-          </div>
-        </form>
-      </section>
-    </div>
-
     <div v-if="showCategoryEditor" class="modal-mask" @click.self="closeCategoryEditor">
       <section class="modal-card category-editor-modal">
         <div class="modal-head">
@@ -408,13 +325,7 @@
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { getMyProfileApi, logoutApi } from "../api/auth";
-import {
-  addArticleApi,
-  deleteArticleApi,
-  detailArticleApi,
-  pageArticleApi,
-  updateArticleApi
-} from "../api/article";
+import { deleteArticleApi, pageArticleApi } from "../api/article";
 import {
   addCategoryApi,
   deleteCategoryApi,
@@ -462,21 +373,6 @@ const articlePager = reactive({
 const articleRows = ref([]);
 const loadingArticles = ref(false);
 const articleError = ref("");
-
-const showArticleEditor = ref(false);
-const editingArticleId = ref(null);
-const savingArticle = ref(false);
-const articleEditorError = ref("");
-
-const articleEditor = reactive({
-  title: "",
-  summary: "",
-  content: "",
-  coverUrl: "",
-  categoryId: "",
-  status: "0",
-  isTop: "0"
-});
 
 const categoryFilters = reactive({
   name: "",
@@ -649,114 +545,12 @@ function changeArticlePageSize() {
   loadArticlesPage();
 }
 
-function resetArticleEditor() {
-  articleEditor.title = "";
-  articleEditor.summary = "";
-  articleEditor.content = "";
-  articleEditor.coverUrl = "";
-  articleEditor.categoryId = "";
-  articleEditor.status = "0";
-  articleEditor.isTop = "0";
-  articleEditorError.value = "";
-}
-
 function openCreateArticle() {
-  editingArticleId.value = null;
-  resetArticleEditor();
-  showArticleEditor.value = true;
+  router.push("/admin/articles/new");
 }
 
-async function openEditArticle(article) {
-  editingArticleId.value = article.id;
-  resetArticleEditor();
-  showArticleEditor.value = true;
-  savingArticle.value = true;
-
-  try {
-    const res = await detailArticleApi(article.id);
-    if (res.code !== 200) {
-      articleEditorError.value = res.message || "获取文章详情失败";
-      return;
-    }
-
-    const detail = res.data || {};
-    articleEditor.title = detail.title || "";
-    articleEditor.summary = detail.summary || "";
-    articleEditor.content = detail.content || "";
-    articleEditor.coverUrl = detail.coverUrl || "";
-    articleEditor.categoryId = detail.categoryId ? String(detail.categoryId) : "";
-    articleEditor.status = detail.status != null ? String(detail.status) : "0";
-    articleEditor.isTop = detail.isTop != null ? String(detail.isTop) : "0";
-  } catch (error) {
-    articleEditorError.value = error.response?.data?.message || error.message || "获取文章详情失败";
-  } finally {
-    savingArticle.value = false;
-  }
-}
-
-function closeArticleEditor() {
-  if (savingArticle.value) {
-    return;
-  }
-  showArticleEditor.value = false;
-}
-
-function validateArticleEditor() {
-  if (!articleEditor.title) {
-    return "请输入文章标题";
-  }
-  if (!articleEditor.content) {
-    return "请输入文章内容";
-  }
-  if (!articleEditor.categoryId) {
-    return "请选择分类";
-  }
-  return "";
-}
-
-function buildArticlePayload() {
-  const payload = {
-    title: articleEditor.title,
-    summary: articleEditor.summary,
-    content: articleEditor.content,
-    coverUrl: articleEditor.coverUrl,
-    categoryId: Number(articleEditor.categoryId),
-    status: Number(articleEditor.status),
-    isTop: Number(articleEditor.isTop)
-  };
-
-  if (editingArticleId.value) {
-    payload.id = editingArticleId.value;
-  }
-  return payload;
-}
-
-async function submitArticle() {
-  articleEditorError.value = validateArticleEditor();
-  if (articleEditorError.value) {
-    return;
-  }
-
-  savingArticle.value = true;
-  try {
-    const payload = buildArticlePayload();
-    const res = editingArticleId.value
-      ? await updateArticleApi(payload)
-      : await addArticleApi(payload);
-
-    if (res.code !== 200) {
-      articleEditorError.value = res.message || "提交失败";
-      return;
-    }
-
-    showArticleEditor.value = false;
-    articlePager.pageNum = 1;
-    await loadArticlesPage();
-  } catch (error) {
-    articleEditorError.value = error.response?.data?.message || error.message || "提交失败";
-  } finally {
-    savingArticle.value = false;
-  }
+function openEditArticle(article) {
+  router.push(`/admin/articles/${article.id}/edit`);
 }
 
 async function handleDeleteArticle(article) {
@@ -1003,5 +797,3 @@ onMounted(async () => {
   await Promise.all([loadProfile(), loadCategoryOptions(), loadArticlesPage(), loadCategoryPage()]);
 });
 </script>
-
-

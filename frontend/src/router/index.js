@@ -2,13 +2,20 @@ import { createRouter, createWebHistory } from "vue-router";
 import LoginView from "../views/LoginView.vue";
 import HomeView from "../views/HomeView.vue";
 import PublicBlogView from "../views/PublicBlogView.vue";
+import PublicBlogDetailView from "../views/PublicBlogDetailView.vue";
+import ArticleEditorView from "../views/ArticleEditorView.vue";
 import { getToken } from "../utils/auth";
 
 const routes = [
   {
     path: "/",
-    name: "blog",
+    name: "public-blog",
     component: PublicBlogView
+  },
+  {
+    path: "/blog/:id",
+    name: "public-blog-detail",
+    component: PublicBlogDetailView
   },
   {
     path: "/login",
@@ -24,6 +31,18 @@ const routes = [
     path: "/admin",
     name: "admin",
     component: HomeView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "/admin/articles/new",
+    name: "article-create",
+    component: ArticleEditorView,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: "/admin/articles/:id/edit",
+    name: "article-edit",
+    component: ArticleEditorView,
     meta: { requiresAuth: true }
   }
 ];

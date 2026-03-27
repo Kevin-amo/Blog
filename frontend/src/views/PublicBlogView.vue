@@ -9,59 +9,47 @@
 
     <section class="hero">
       <h2>欢迎来到我的文字角落</h2>
-      <p>这里展示已发布的文章，游客无需登录即可阅读。</p>
+      <p>这里展示已发布文章的预览，点击卡片会在新窗口打开完整内容。</p>
     </section>
 
-    <section class="panel public-layout">
-      <aside class="public-list">
-        <div class="panel-title">最新发布</div>
-        <div v-if="loading" class="muted">正在加载文章...</div>
-        <p v-else-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
-        <div v-else-if="!articles.length" class="empty-state">还没有已发布文章。</div>
-        <button
-          v-else
+    <section class="panel">
+      <div class="panel-title">最新发布</div>
+      <div v-if="loading" class="muted">正在加载文章...</div>
+      <p v-else-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
+      <div v-else-if="!articles.length" class="empty-state">还没有已发布文章。</div>
+
+      <div v-else class="public-grid">
+        <article
           v-for="item in articles"
           :key="item.id"
-          type="button"
-          class="public-item"
-          :class="{ active: item.id === activeId }"
-          @click="pickArticle(item.id)"
+          class="public-card"
+          role="button"
+          tabindex="0"
+          @click="openArticle(item.id)"
+          @keydown.enter="openArticle(item.id)"
         >
-          <p class="public-item-title">{{ item.title }}</p>
+          <h3>{{ item.title }}</h3>
           <p class="public-item-summary">{{ item.summary || brief(item.content) }}</p>
-          <span class="public-item-time">{{ formatDate(item.createTime) }}</span>
-        </button>
-      </aside>
-
-      <article class="public-detail">
-        <div v-if="loadingDetail" class="muted">正在加载正文...</div>
-        <p v-else-if="detailError" class="error-msg">{{ detailError }}</p>
-        <div v-else-if="currentArticle">
-          <h2>{{ currentArticle.title }}</h2>
-          <p class="public-meta">
-            发布于 {{ formatDate(currentArticle.createTime) }}
-            <span v-if="currentArticle.updateTime"> · 更新于 {{ formatDate(currentArticle.updateTime) }}</span>
-          </p>
-          <div class="public-content">{{ currentArticle.content || "暂无正文" }}</div>
-        </div>
-        <div v-else class="empty-state">请选择一篇文章开始阅读。</div>
-      </article>
+          <div class="public-card-foot">
+            <span class="public-item-time">{{ formatDate(item.createTime) }}</span>
+            <button class="submit-btn preview-btn" type="button" @click.stop="openArticle(item.id)">阅读全文</button>
+          </div>
+        </article>
+      </div>
     </section>
   </main>
 </template>
 
 <script setup>
 import { onMounted, ref } from "vue";
-import { publicDetailArticleApi, publicListArticleApi } from "../api/article";
+import { useRouter } from "vue-router";
+import { publicListArticleApi } from "../api/article";
+import { extractPlainText } from "../utils/markdown";
 
+const router = useRouter();
 const articles = ref([]);
-const activeId = ref(null);
-const currentArticle = ref(null);
-
 const loading = ref(false);
-const loadingDetail = ref(false);
 const errorMsg = ref("");
-const detailError = ref("");
 
 function formatDate(raw) {
   if (!raw) {
@@ -71,10 +59,11 @@ function formatDate(raw) {
 }
 
 function brief(content) {
-  if (!content) {
+  const plain = extractPlainText(content);
+  if (!plain) {
     return "暂无摘要";
   }
-  return content.length > 70 ? `${content.slice(0, 70)}...` : content;
+  return plain.length > 120 ? `${plain.slice(0, 120)}...` : plain;
 }
 
 async function loadList() {
@@ -89,9 +78,6 @@ async function loadList() {
     }
 
     articles.value = Array.isArray(res.data) ? res.data : [];
-    if (articles.value.length > 0) {
-      await pickArticle(articles.value[0].id);
-    }
   } catch (error) {
     errorMsg.value = error.response?.data?.message || error.message || "获取文章列表失败";
   } finally {
@@ -99,29 +85,9 @@ async function loadList() {
   }
 }
 
-async function pickArticle(id) {
-  if (!id) {
-    return;
-  }
-
-  activeId.value = id;
-  loadingDetail.value = true;
-  detailError.value = "";
-
-  try {
-    const res = await publicDetailArticleApi(id);
-    if (res.code !== 200) {
-      detailError.value = res.message || "获取文章详情失败";
-      return;
-    }
-
-    currentArticle.value = res.data || null;
-  } catch (error) {
-    detailError.value = error.response?.data?.message || error.message || "获取文章详情失败";
-    currentArticle.value = null;
-  } finally {
-    loadingDetail.value = false;
-  }
+function openArticle(id) {
+  const href = router.resolve({ name: "public-blog-detail", params: { id } }).href;
+  window.open(href, "_blank", "noopener");
 }
 
 onMounted(() => {
