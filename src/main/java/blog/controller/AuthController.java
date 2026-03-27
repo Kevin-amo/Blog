@@ -28,4 +28,12 @@ public class AuthController {
         return Result.success("登录成功！", authService.login(loginDTO));
     }
 
+    /**
+     * 登出接口
+     */
+    @PostMapping("/logout")
+    public Result<?> logout() {
+        // 让前端删除token, 后端不需要处理
+        return Result.success("登出成功！");
+    }
 }

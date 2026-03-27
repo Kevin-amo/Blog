@@ -1,5 +1,5 @@
 server:
-  port: 8080
+  port: 8081
 
 spring:
   datasource:
@@ -10,10 +10,11 @@ spring:
 
 mybatis:
   mapper-locations: classpath:/mapper/*.xml
-  type-aliases-package: com.example.blog.entity
+  type-aliases-package: blog.entity
   configuration:
     map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 jwt:
   secret: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9d2VzZG9tZQ
-  expiration: 720000000
+  expiration: 720000000  # 暂时设定200h

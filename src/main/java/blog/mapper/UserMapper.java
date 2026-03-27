@@ -1,7 +1,7 @@
 package blog.mapper;
 
 
-import blog.entity.User;
+import blog.entity.po.User;
 import org.apache.ibatis.annotations.Param;
 
 /**

@@ -1,12 +1,11 @@
 package blog.service.impl;
 
-import blog.entity.User;
+import blog.entity.po.User;
 import blog.entity.dto.LoginDTO;
 import blog.mapper.UserMapper;
 import blog.service.AuthService;
 import blog.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
-import org.apache.ibatis.javassist.util.HotSwapAgent;
 import org.springframework.stereotype.Service;
 
 import java.util.HashMap;

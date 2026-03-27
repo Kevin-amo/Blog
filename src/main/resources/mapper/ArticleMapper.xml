@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="blog.mapper.ArticleMapper">
+
+    <!--公共查询字段-->
+    <sql id="base_column_list">id, title, summary, content, cover_url, category_id, status, is_top,
+        view_count, comment_count, create_by, create_time, update_by, update_time, is_deleted
+    </sql>
+
+    <!--
+        新增文章
+        useGeneratedKeys="true" 表示回填主键到 article.id
+    -->
+    <insert id="insert" parameterType="blog.entity.po.Article"
+            useGeneratedKeys="true" keyProperty="id">
+        INSERT INTO article (title, summary, content, cover_url, category_id, status, is_top,
+                             view_count, comment_count, create_by, create_time, update_by, update_time, is_deleted)
+        VALUES (#{title}, #{summary}, #{content}, #{coverUrl}, #{categoryId}, #{status}, #{isTop},
+                #{viewCount}, #{commentCount}, #{createBy}, #{createTime}, #{updateBy}, #{updateTime}, #{isDeleted})
+    </insert>
+
+    <!--
+    查询当前登录用户自己的文章列表
+    支持标题、状态、分类筛选
+    排序规则：置顶优先，然后按创建时间倒序
+    -->
+    <select id="selectList" resultType="blog.entity.po.Article">
+        SELECT
+        <include refid="base_column_list"/>
+        FROM article
+        WHERE is_deleted = 0
+        AND create_by = #{currentUserId}
+        <if test="queryDTO != null">
+            <if test="queryDTO.title != null and queryDTO.title != ''">
+                AND title LIKE CONCAT('%', #{queryDTO.title}, '%')
+            </if>
+            <if test="queryDTO.status != null">
+                AND status = #{queryDTO.status}
+            </if>
+            <if test="queryDTO.categoryId != null">
+                AND category_id = #{queryDTO.categoryId}
+            </if>
+        </if>
+        ORDER BY is_top DESC, create_time DESC
+    </select>
+
+    <!--查询当前登录用户自己的文章详情-->
+    <select id="selectByIdAndCreateBy" resultType="blog.entity.po.Article">
+        SELECT
+        <include refid="base_column_list"/>
+        FROM article
+        WHERE id = #{id}
+        AND create_by = #{currentUserId}
+        AND is_deleted = 0
+    </select>
+
+    <!--
+        修改文章
+        只允许修改当前用户自己的文章
+    -->
+    <update id="updateByIdAndCreateBy">
+        UPDATE article
+        <set>
+            <if test="article.title != null">title = #{article.title},</if>
+            <if test="article.summary != null">summary = #{article.summary},</if>
+            <if test="article.content != null">content = #{article.content},</if>
+            <if test="article.coverUrl != null">cover_url = #{article.coverUrl},</if>
+            <if test="article.categoryId != null">category_id = #{article.categoryId},</if>
+            <if test="article.status != null">status = #{article.status},</if>
+            <if test="article.isTop != null">is_top = #{article.isTop},</if>
+            update_by = #{article.updateBy},
+            update_time = #{article.updateTime}
+        </set>
+        WHERE id = #{article.id}
+        AND create_by = #{currentUserId}
+        AND is_deleted = 0
+    </update>
+
+    <!--逻辑删除文章-->
+    <update id="deleteByIdAndCreateBy">
+        UPDATE article
+        SET is_deleted  = 1,
+            update_by = #{updateBy},
+            update_time = NOW()
+        WHERE id = #{id}
+          AND create_by = #{currentUserId}
+          AND is_deleted = 0
+    </update>
+
+    <!-- 统计某个分类下的文章数 -->
+    <select id="countByCategoryId" resultType="java.lang.Integer">
+        select count(*)
+        from article
+        where category_id = #{categoryId}
+        and is_deleted = 0
+    </select>
+
+    <!-- 分页查询 -->
+    <select id="selectPage" resultType="blog.entity.vo.ArticlePageVO">
+        SELECT a.id,
+               a.title,
+               a.category_id,
+               c.name AS category_name,
+               a.summary,
+               a.cover_url AS cover_image,
+               a.status,
+               a.is_top,
+               a.create_time
+        FROM article a
+        LEFT JOIN category c ON a.category_id = c.id
+        WHERE a.is_deleted = 0
+        AND c.is_deleted = 0
+        AND a.create_by = #{currentUserId}
+        <if test="queryDTO != null and queryDTO.title != null and queryDTO.title != ''">
+            AND a.title LIKE CONCAT('%', #{queryDTO.title}, '%')
+        </if>
+        <if test="queryDTO != null and queryDTO.categoryId != null">
+            AND a.category_id = #{queryDTO.categoryId}
+        </if>
+        <if test="queryDTO != null and queryDTO.status != null">
+            AND a.status = #{queryDTO.status}
+        </if>
+        ORDER BY a.id DESC
+    </select>
+
+</mapper>

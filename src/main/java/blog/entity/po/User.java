@@ -1,4 +1,4 @@
-package blog.entity;
+package blog.entity.po;
 
 import lombok.Data;
 

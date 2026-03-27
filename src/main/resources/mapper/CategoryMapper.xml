@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="blog.mapper.CategoryMapper">
+
+    <!-- 新增分类 -->
+    <insert id="insert" parameterType="blog.entity.po.Category" useGeneratedKeys="true" keyProperty="id">
+        insert into category (name, sort, status, create_time, update_time, is_deleted)
+        values (#{name}, #{sort}, #{status}, NOW(), NOW(), #{isDeleted})
+    </insert>
+
+    <!-- 修改分类 -->
+    <update id="updateById" parameterType="blog.entity.po.Category">
+        update category
+        set name = #{name},
+            sort = #{sort},
+            status = #{status},
+            update_time = NOW()
+        where id = #{id}
+        and is_deleted = 0
+    </update>
+
+    <!-- 逻辑删除 -->
+    <update id="deleteById">
+        update category
+        set is_deleted = 1, update_time = NOW()
+        where id = #{id}
+        and is_deleted = 0
+    </update>
+
+    <!-- 根据id查询分类 -->
+    <select id="selectById" resultType="blog.entity.vo.CategoryVO">
+        select id, name, sort, status, create_time
+        from category
+        where id = #{id}
+        and is_deleted = 0
+    </select>
+
+    <!-- 分页查询 -->
+    <select id="selectPage" parameterType="blog.entity.dto.CategoryPageQueryDTO" resultType="blog.entity.vo.CategoryVO">
+        SELECT id, name, sort, status, create_time
+        FROM category
+        WHERE is_deleted = 0
+        <if test="name != null and name != ''">
+            AND name LIKE CONCAT('%', #{name}, '%')
+        </if>
+        <if test="status != null">
+            AND status = #{status}
+        </if>
+        ORDER BY sort ASC, id DESC
+    </select>
+
+    <!-- 校验重名 -->
+    <select id="countByName" resultType="java.lang.Integer">
+        select count(*)
+        from category
+        where name = #{name}
+        and is_deleted = 0
+    </select>
+
+    <!-- 修改时校验重名 -->
+    <select id="countByNameAndNotId" resultType="java.lang.Integer">
+        select count(*)
+        from category
+        where name = #{name}
+        and id != #{id}
+        and is_deleted = 0
+    </select>
+
+    <!-- 下拉选项 -->
+    <select id="selectOptions" resultType="blog.entity.vo.CategoryOptionVO">
+        select id, name
+        from category
+        where status = 1
+        and is_deleted = 0
+        order by sort asc, id desc
+    </select>
+
+</mapper>
