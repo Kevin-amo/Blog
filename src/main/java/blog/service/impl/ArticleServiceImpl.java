@@ -1,6 +1,7 @@
 package blog.service.impl;
 
 import blog.common.Result.PageResult;
+import static blog.common.constant.ArticleConstants.*;
 import blog.entity.dto.ArticleAddDTO;
 import blog.entity.dto.ArticlePageQueryDTO;
 import blog.entity.dto.ArticleQueryDTO;
@@ -27,12 +28,17 @@ import java.util.List;
 @Service
 public class ArticleServiceImpl implements ArticleService {
 
+
     @Autowired
     private ArticleMapper articleMapper;
 
     @Override
-    public void add(ArticleAddDTO addDTO) {
+    public Long add(ArticleAddDTO addDTO) {
         Long currentUserId = UserContext.getUser().getUserId();
+        validateStatus(addDTO.getStatus());
+        if (STATUS_PUBLISHED == addDTO.getStatus()) {
+            validatePublishFields(addDTO.getTitle(), addDTO.getContent(), addDTO.getCategoryId());
+        }
 
         Article article = new Article();
         BeanUtils.copyProperties(addDTO, article);
@@ -47,6 +53,7 @@ public class ArticleServiceImpl implements ArticleService {
         article.setUpdateTime(LocalDateTime.now());
 
         articleMapper.insert(article);
+        return article.getId();
     }
 
     @Override
@@ -104,6 +111,10 @@ public class ArticleServiceImpl implements ArticleService {
     @Override
     public void update(ArticleUpdateDTO updateDTO) {
         Long currentUserId = UserContext.getUser().getUserId();
+        validateStatus(updateDTO.getStatus());
+        if (STATUS_PUBLISHED == updateDTO.getStatus()) {
+            validatePublishFields(updateDTO.getTitle(), updateDTO.getContent(), updateDTO.getCategoryId());
+        }
 
         Article article = new Article();
         BeanUtils.copyProperties(updateDTO, article);
@@ -134,5 +145,26 @@ public class ArticleServiceImpl implements ArticleService {
 
         PageInfo<ArticlePageVO> pageInfo = new PageInfo<>(list);
         return new PageResult<>(pageInfo.getTotal(), pageInfo.getList());
+    }
+
+    private void validateStatus(Integer status) {
+        if (status == null) {
+            throw new RuntimeException("文章状态不能为空");
+        }
+        if (status != STATUS_DRAFT && status != STATUS_PUBLISHED) {
+            throw new RuntimeException("文章状态非法");
+        }
+    }
+
+    private void validatePublishFields(String title, String content, Long categoryId) {
+        if (title == null || title.trim().isEmpty()) {
+            throw new RuntimeException("请输入文章标题");
+        }
+        if (content == null || content.trim().isEmpty()) {
+            throw new RuntimeException("请输入文章内容");
+        }
+        if (categoryId == null) {
+            throw new RuntimeException("请选择分类");
+        }
     }
 }

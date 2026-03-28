@@ -1,9 +1,12 @@
 package blog.entity.dto;
 
-import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
+/**
+ * @author admin
+ * 更新文章 DTO
+ */
 @Data
 public class ArticleUpdateDTO {
 
@@ -16,7 +19,6 @@ public class ArticleUpdateDTO {
     /**
      * 文章标题
      */
-    @NotBlank(message = "标题不能为空")
     private String title;
 
     /**
@@ -27,7 +29,6 @@ public class ArticleUpdateDTO {
     /**
      * 文章内容
      */
-    @NotBlank(message = "内容不能为空")
     private String content;
 
     /**
@@ -38,7 +39,6 @@ public class ArticleUpdateDTO {
     /**
      * 分类ID
      */
-    @NotNull(message = "分类ID不能为空")
     private Long categoryId;
 
     /**
@@ -51,5 +51,4 @@ public class ArticleUpdateDTO {
      * 是否置顶：0-否，1-是
      */
     private Integer isTop;
-
 }

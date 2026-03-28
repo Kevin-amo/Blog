@@ -32,9 +32,8 @@ public class ArticleController {
      * @return 操作结果
      */
     @PostMapping
-    public Result<Void> add(@RequestBody @Valid ArticleAddDTO addDTO) {
-        articleService.add(addDTO);
-        return Result.success();
+    public Result<Long> add(@RequestBody @Valid ArticleAddDTO addDTO) {
+        return Result.success(articleService.add(addDTO));
     }
 
     /**

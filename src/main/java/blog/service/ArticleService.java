@@ -20,7 +20,7 @@ public interface ArticleService {
      *
      * @param addDTO 添加参数
      */
-    void add(ArticleAddDTO addDTO);
+    Long add(ArticleAddDTO addDTO);
 
     /**
      * 查询当前登录用户的文章列表

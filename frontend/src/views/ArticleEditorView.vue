@@ -8,7 +8,7 @@
       <div class="editor-top-actions">
         <button class="ghost-btn" type="button" @click="goBack">返回管理台</button>
         <button class="submit-btn" type="button" :disabled="saving" @click="submitArticle">
-          {{ saving ? "保存中..." : isEdit ? "保存修改" : "发布文章" }}
+          {{ saving ? "发布中..." : "发布文章" }}
         </button>
       </div>
     </header>
@@ -44,16 +44,6 @@
           </label>
 
           <label>
-            状态
-            <div class="select-shell">
-              <select v-model="form.status" class="select-control">
-                <option value="0">草稿</option>
-                <option value="1">已发布</option>
-              </select>
-            </div>
-          </label>
-
-          <label>
             是否置顶
             <div class="select-shell">
               <select v-model="form.isTop" class="select-control">
@@ -70,6 +60,7 @@
         </label>
       </form>
       <p v-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
+      <p v-if="autoSaveMessage" class="muted">{{ autoSaveMessage }}</p>
     </section>
 
     <section class="panel editor-shell">
@@ -106,11 +97,16 @@
 </template>
 
 <script setup>
-import { computed, nextTick, onMounted, reactive, ref } from "vue";
+import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { addArticleApi, detailArticleApi, updateArticleApi } from "../api/article";
 import { optionsCategoryApi } from "../api/category";
 import { parseMarkdownToHtml } from "../utils/markdown";
+
+const DRAFT_STATUS = 0;
+const PUBLISHED_STATUS = 1;
+const AUTO_SAVE_DELAY = 1200;
+const LOCAL_DRAFT_KEY = "blog_editor_local_draft";
 
 const router = useRouter();
 const route = useRoute();
@@ -118,8 +114,16 @@ const route = useRoute();
 const categoryOptions = ref([]);
 const saving = ref(false);
 const loadingDetail = ref(false);
+const autoSaving = ref(false);
 const errorMsg = ref("");
+const autoSaveMessage = ref("");
 const textareaRef = ref(null);
+
+const hydrating = ref(true);
+const hasPendingChanges = ref(false);
+const draftArticleId = ref(null);
+let autoSaveTimer = null;
+let autoSavePromise = null;
 
 const form = reactive({
   title: "",
@@ -127,7 +131,6 @@ const form = reactive({
   content: "",
   coverUrl: "",
   categoryId: "",
-  status: "0",
   isTop: "0"
 });
 
@@ -144,7 +147,191 @@ const previewHtml = computed(() => {
   return parseMarkdownToHtml(form.content);
 });
 
-function goBack() {
+function getCurrentArticleId() {
+  return articleId.value || draftArticleId.value;
+}
+
+function hasDraftContent() {
+  return Boolean(
+    form.title.trim() ||
+      form.summary.trim() ||
+      form.content.trim() ||
+      form.coverUrl.trim() ||
+      form.categoryId
+  );
+}
+
+function clearAutoSaveTimer() {
+  if (!autoSaveTimer) {
+    return;
+  }
+  clearTimeout(autoSaveTimer);
+  autoSaveTimer = null;
+}
+
+function scheduleAutoSave() {
+  if (saving.value || loadingDetail.value || hydrating.value) {
+    return;
+  }
+  clearAutoSaveTimer();
+  autoSaveTimer = setTimeout(() => {
+    void autoSaveDraft();
+  }, AUTO_SAVE_DELAY);
+}
+
+function markDirty() {
+  if (hydrating.value) {
+    return;
+  }
+  hasPendingChanges.value = true;
+  scheduleAutoSave();
+}
+
+watch(
+  [
+    () => form.title,
+    () => form.summary,
+    () => form.content,
+    () => form.coverUrl,
+    () => form.categoryId,
+    () => form.isTop
+  ],
+  () => {
+    markDirty();
+  }
+);
+
+function formatTime() {
+  return new Date().toLocaleTimeString("zh-CN", {
+    hour12: false
+  });
+}
+
+function saveLocalDraft() {
+  if (isEdit.value || draftArticleId.value) {
+    return;
+  }
+  const localPayload = {
+    title: form.title,
+    summary: form.summary,
+    content: form.content,
+    coverUrl: form.coverUrl,
+    categoryId: form.categoryId,
+    isTop: form.isTop
+  };
+  localStorage.setItem(LOCAL_DRAFT_KEY, JSON.stringify(localPayload));
+}
+
+function loadLocalDraft() {
+  if (isEdit.value) {
+    return;
+  }
+  const raw = localStorage.getItem(LOCAL_DRAFT_KEY);
+  if (!raw) {
+    return;
+  }
+  try {
+    const data = JSON.parse(raw);
+    form.title = data.title || "";
+    form.summary = data.summary || "";
+    form.content = data.content || "";
+    form.coverUrl = data.coverUrl || "";
+    form.categoryId = data.categoryId || "";
+    form.isTop = data.isTop != null ? String(data.isTop) : "0";
+  } catch {
+    localStorage.removeItem(LOCAL_DRAFT_KEY);
+  }
+}
+
+function clearLocalDraft() {
+  localStorage.removeItem(LOCAL_DRAFT_KEY);
+}
+
+function buildPayload(status) {
+  const payload = {
+    title: form.title.trim(),
+    summary: form.summary.trim(),
+    content: form.content,
+    coverUrl: form.coverUrl.trim(),
+    categoryId: form.categoryId ? Number(form.categoryId) : null,
+    status,
+    isTop: Number(form.isTop)
+  };
+
+  const currentId = getCurrentArticleId();
+  if (currentId) {
+    payload.id = currentId;
+  }
+
+  return payload;
+}
+
+async function runAutoSaveDraft() {
+  if (saving.value || loadingDetail.value || hydrating.value || autoSaving.value) {
+    return;
+  }
+  if (!hasPendingChanges.value || !hasDraftContent()) {
+    return;
+  }
+  if (!getCurrentArticleId() && !form.categoryId) {
+    saveLocalDraft();
+    autoSaveMessage.value = "已暂存本地草稿，选择分类后会自动保存到服务器";
+    return;
+  }
+
+  autoSaving.value = true;
+  autoSaveMessage.value = "草稿自动保存中...";
+
+  try {
+    const payload = buildPayload(DRAFT_STATUS);
+    const editingId = getCurrentArticleId();
+    const res = editingId ? await updateArticleApi(payload) : await addArticleApi(payload);
+
+    if (res.code !== 200) {
+      autoSaveMessage.value = res.message || "草稿自动保存失败";
+      return;
+    }
+
+    if (!editingId) {
+      const createdId = Number(res.data || 0);
+      if (createdId > 0) {
+        draftArticleId.value = createdId;
+        if (!articleId.value) {
+          await router.replace(`/admin/articles/${createdId}/edit`);
+        }
+      }
+    }
+
+    hasPendingChanges.value = false;
+    errorMsg.value = "";
+    clearLocalDraft();
+    autoSaveMessage.value = `草稿已自动保存（${formatTime()}）`;
+  } catch (error) {
+    autoSaveMessage.value = error.response?.data?.message || error.message || "草稿自动保存失败";
+  } finally {
+    autoSaving.value = false;
+  }
+}
+
+async function autoSaveDraft() {
+  if (autoSavePromise) {
+    await autoSavePromise;
+  }
+  const task = runAutoSaveDraft();
+  autoSavePromise = task;
+  await task;
+  if (autoSavePromise === task) {
+    autoSavePromise = null;
+  }
+}
+
+async function flushAutoSave() {
+  clearAutoSaveTimer();
+  await autoSaveDraft();
+}
+
+async function goBack() {
+  await flushAutoSave();
   router.push("/admin");
 }
 
@@ -242,7 +429,7 @@ function insertCodeBlock() {
   applyContentAndSelection(nextValue, selectionStart, selectionEnd);
 }
 
-function validate() {
+function validatePublish() {
   if (!form.title.trim()) {
     return "请输入文章标题";
   }
@@ -253,24 +440,6 @@ function validate() {
     return "请选择分类";
   }
   return "";
-}
-
-function buildPayload() {
-  const payload = {
-    title: form.title.trim(),
-    summary: form.summary.trim(),
-    content: form.content,
-    coverUrl: form.coverUrl.trim(),
-    categoryId: Number(form.categoryId),
-    status: Number(form.status),
-    isTop: Number(form.isTop)
-  };
-
-  if (isEdit.value) {
-    payload.id = articleId.value;
-  }
-
-  return payload;
 }
 
 async function loadCategoryOptions() {
@@ -302,12 +471,12 @@ async function loadDetail() {
     }
 
     const detail = res.data || {};
+    draftArticleId.value = detail.id || articleId.value;
     form.title = detail.title || "";
     form.summary = detail.summary || "";
     form.content = detail.content || "";
     form.coverUrl = detail.coverUrl || "";
     form.categoryId = detail.categoryId ? String(detail.categoryId) : "";
-    form.status = detail.status != null ? String(detail.status) : "0";
     form.isTop = detail.isTop != null ? String(detail.isTop) : "0";
   } catch (error) {
     errorMsg.value = error.response?.data?.message || error.message || "获取文章详情失败";
@@ -321,33 +490,62 @@ async function submitArticle() {
     return;
   }
 
-  errorMsg.value = validate();
+  errorMsg.value = validatePublish();
   if (errorMsg.value) {
     return;
   }
 
+  clearAutoSaveTimer();
+  if (autoSavePromise) {
+    await autoSavePromise;
+  }
+
   saving.value = true;
+  autoSaveMessage.value = "";
   try {
-    const payload = buildPayload();
-    const res = isEdit.value
+    const payload = buildPayload(PUBLISHED_STATUS);
+    const currentId = getCurrentArticleId();
+    const res = currentId
       ? await updateArticleApi(payload)
       : await addArticleApi(payload);
 
     if (res.code !== 200) {
-      errorMsg.value = res.message || "提交失败";
+      errorMsg.value = res.message || "发布失败";
       return;
     }
 
+    hasPendingChanges.value = false;
+    clearLocalDraft();
     router.push("/admin");
   } catch (error) {
-    errorMsg.value = error.response?.data?.message || error.message || "提交失败";
+    errorMsg.value = error.response?.data?.message || error.message || "发布失败";
   } finally {
     saving.value = false;
   }
 }
 
+function handleBeforeUnload() {
+  if (!hasPendingChanges.value || !hasDraftContent()) {
+    return;
+  }
+  saveLocalDraft();
+  void autoSaveDraft();
+}
+
 onMounted(async () => {
   await loadCategoryOptions();
   await loadDetail();
+  loadLocalDraft();
+  hydrating.value = false;
+  window.addEventListener("beforeunload", handleBeforeUnload);
+});
+
+onBeforeUnmount(() => {
+  window.removeEventListener("beforeunload", handleBeforeUnload);
+  clearAutoSaveTimer();
+  if (hasPendingChanges.value && hasDraftContent() && !saving.value && !loadingDetail.value) {
+    saveLocalDraft();
+    void autoSaveDraft();
+  }
 });
 </script>

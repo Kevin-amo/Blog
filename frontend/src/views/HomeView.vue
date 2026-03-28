@@ -257,7 +257,7 @@
       </section>
     </template>
 
-    <div v-if="showCategoryEditor" class="modal-mask" @click.self="closeCategoryEditor">
+    <div v-if="showCategoryEditor" class="modal-mask">
       <section class="modal-card category-editor-modal">
         <div class="modal-head">
           <h3>{{ editingCategoryId ? "编辑分类" : "新增分类" }}</h3>
