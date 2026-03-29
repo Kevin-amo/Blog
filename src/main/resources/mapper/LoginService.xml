@@ -4,75 +4,88 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="blog.mapper.ArticleMapper">
 
-    <sql id="base_column_list">id, title, summary, content, cover_url, category_id, status, is_top,
+    <sql id="base_column_list">
+        id, title, summary, content, cover_url, category_id, status, audit_status, is_top,
         view_count, comment_count, create_by, create_time, update_by, update_time, is_deleted
     </sql>
 
-    <insert id="insert" parameterType="blog.entity.po.Article"
-            useGeneratedKeys="true" keyProperty="id">
-        INSERT INTO article (title, summary, content, cover_url, category_id, status, is_top,
+    <insert id="insert" parameterType="blog.entity.po.Article" useGeneratedKeys="true" keyProperty="id">
+        insert into article (title, summary, content, cover_url, category_id, status, audit_status, is_top,
                              view_count, comment_count, create_by, create_time, update_by, update_time, is_deleted)
-        VALUES (#{title}, #{summary}, #{content}, #{coverUrl}, #{categoryId}, #{status}, #{isTop},
+        values (#{title}, #{summary}, #{content}, #{coverUrl}, #{categoryId}, #{status}, #{auditStatus}, #{isTop},
                 #{viewCount}, #{commentCount}, #{createBy}, #{createTime}, #{updateBy}, #{updateTime}, #{isDeleted})
     </insert>
 
     <select id="selectList" resultType="blog.entity.po.Article">
-        SELECT
+        select
         <include refid="base_column_list"/>
-        FROM article
-        WHERE is_deleted = 0
-          AND create_by = #{currentUserId}
+        from article
+        where is_deleted = 0
+          and create_by = #{currentUserId}
         <if test="queryDTO != null">
             <if test="queryDTO.title != null and queryDTO.title != ''">
-                AND title LIKE CONCAT('%', #{queryDTO.title}, '%')
+                and title like concat('%', #{queryDTO.title}, '%')
             </if>
             <if test="queryDTO.status != null">
-                AND status = #{queryDTO.status}
+                and status = #{queryDTO.status}
+            </if>
+            <if test="queryDTO.auditStatus != null">
+                and audit_status = #{queryDTO.auditStatus}
             </if>
             <if test="queryDTO.categoryId != null">
-                AND category_id = #{queryDTO.categoryId}
+                and category_id = #{queryDTO.categoryId}
             </if>
         </if>
-        ORDER BY is_top DESC, create_time DESC
+        order by is_top desc, create_time desc
     </select>
 
     <select id="selectPublishedList" resultType="blog.entity.po.Article">
-        SELECT
+        select
         <include refid="base_column_list"/>
-        FROM article
-        WHERE is_deleted = 0
-          AND status = 1
+        from article
+        where is_deleted = 0
+          and status = 1
+          and audit_status = 1
         <if test="queryDTO != null">
             <if test="queryDTO.title != null and queryDTO.title != ''">
-                AND title LIKE CONCAT('%', #{queryDTO.title}, '%')
+                and title like concat('%', #{queryDTO.title}, '%')
             </if>
             <if test="queryDTO.categoryId != null">
-                AND category_id = #{queryDTO.categoryId}
+                and category_id = #{queryDTO.categoryId}
             </if>
         </if>
-        ORDER BY is_top DESC, create_time DESC
+        order by is_top desc, create_time desc
     </select>
 
     <select id="selectByIdAndCreateBy" resultType="blog.entity.po.Article">
-        SELECT
+        select
         <include refid="base_column_list"/>
-        FROM article
-        WHERE id = #{id}
-          AND create_by = #{currentUserId}
-          AND is_deleted = 0
+        from article
+        where id = #{id}
+          and create_by = #{currentUserId}
+          and is_deleted = 0
     </select>
 
     <select id="selectPublishedById" resultType="blog.entity.po.Article">
-        SELECT
+        select
         <include refid="base_column_list"/>
-        FROM article
-        WHERE id = #{id}
-          AND is_deleted = 0
-          AND status = 1
+        from article
+        where id = #{id}
+          and is_deleted = 0
+          and status = 1
+          and audit_status = 1
+    </select>
+
+    <select id="selectById" resultType="blog.entity.po.Article">
+        select
+        <include refid="base_column_list"/>
+        from article
+        where id = #{id}
+          and is_deleted = 0
     </select>
 
     <update id="updateByIdAndCreateBy">
-        UPDATE article
+        update article
         <set>
             <if test="article.title != null">title = #{article.title},</if>
             <if test="article.summary != null">summary = #{article.summary},</if>
@@ -80,23 +93,24 @@
             <if test="article.coverUrl != null">cover_url = #{article.coverUrl},</if>
             <if test="article.categoryId != null">category_id = #{article.categoryId},</if>
             <if test="article.status != null">status = #{article.status},</if>
+            <if test="article.auditStatus != null">audit_status = #{article.auditStatus},</if>
             <if test="article.isTop != null">is_top = #{article.isTop},</if>
             update_by = #{article.updateBy},
             update_time = #{article.updateTime}
         </set>
-        WHERE id = #{article.id}
-          AND create_by = #{currentUserId}
-          AND is_deleted = 0
+        where id = #{article.id}
+          and create_by = #{currentUserId}
+          and is_deleted = 0
     </update>
 
     <update id="deleteByIdAndCreateBy">
-        UPDATE article
-        SET is_deleted  = 1,
+        update article
+        set is_deleted = 1,
             update_by = #{updateBy},
-            update_time = NOW()
-        WHERE id = #{id}
-          AND create_by = #{currentUserId}
-          AND is_deleted = 0
+            update_time = now()
+        where id = #{id}
+          and create_by = #{currentUserId}
+          and is_deleted = 0
     </update>
 
     <select id="countByCategoryId" resultType="java.lang.Integer">
@@ -107,30 +121,78 @@
     </select>
 
     <select id="selectPage" resultType="blog.entity.vo.ArticlePageVO">
-        SELECT a.id,
+        select a.id,
                a.title,
                a.category_id,
-               c.name AS category_name,
+               c.name as category_name,
                a.summary,
-               a.cover_url AS cover_image,
+               a.cover_url as cover_image,
                a.status,
+               a.audit_status,
                a.is_top,
                a.create_time
-        FROM article a
-                 LEFT JOIN category c ON a.category_id = c.id
-        WHERE a.is_deleted = 0
-          AND c.is_deleted = 0
-          AND a.create_by = #{currentUserId}
+        from article a
+                 left join category c on a.category_id = c.id and c.is_deleted = 0
+        where a.is_deleted = 0
+          and a.create_by = #{currentUserId}
         <if test="queryDTO != null and queryDTO.title != null and queryDTO.title != ''">
-            AND a.title LIKE CONCAT('%', #{queryDTO.title}, '%')
+            and a.title like concat('%', #{queryDTO.title}, '%')
         </if>
         <if test="queryDTO != null and queryDTO.categoryId != null">
-            AND a.category_id = #{queryDTO.categoryId}
+            and a.category_id = #{queryDTO.categoryId}
         </if>
         <if test="queryDTO != null and queryDTO.status != null">
-            AND a.status = #{queryDTO.status}
+            and a.status = #{queryDTO.status}
         </if>
-        ORDER BY a.id DESC
+        <if test="queryDTO != null and queryDTO.auditStatus != null">
+            and a.audit_status = #{queryDTO.auditStatus}
+        </if>
+        order by a.id desc
     </select>
+
+    <select id="selectReviewPage" resultType="blog.entity.vo.ArticleReviewPageVO">
+        select a.id,
+               a.title,
+               a.summary,
+               a.content,
+               a.status,
+               a.audit_status,
+               a.create_by,
+               u.username as author_username,
+               u.nickname as author_nickname,
+               a.create_time,
+               a.update_time
+        from article a
+                 left join user u on a.create_by = u.id
+        where a.is_deleted = 0
+          and u.role = 0
+          and a.status = 1
+        <if test="queryDTO != null and queryDTO.title != null and queryDTO.title != ''">
+            and a.title like concat('%', #{queryDTO.title}, '%')
+        </if>
+        <if test="queryDTO != null and queryDTO.auditStatus != null">
+            and a.audit_status = #{queryDTO.auditStatus}
+        </if>
+        order by a.id desc
+    </select>
+
+    <update id="updateAuditStatusById">
+        update article
+        set audit_status = #{auditStatus},
+            update_by = #{updateBy},
+            update_time = now()
+        where id = #{id}
+          and is_deleted = 0
+          and status = 1
+    </update>
+
+    <update id="deleteByCreateBy">
+        update article
+        set is_deleted = 1,
+            update_by = #{updateBy},
+            update_time = now()
+        where create_by = #{createBy}
+          and is_deleted = 0
+    </update>
 
 </mapper>

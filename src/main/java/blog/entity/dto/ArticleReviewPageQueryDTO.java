@@ -3,22 +3,19 @@ package blog.entity.dto;
 import lombok.Data;
 
 /**
- * 文章列表查询 DTO
+ * 管理员审核分页查询 DTO
  */
 @Data
-public class ArticleQueryDTO {
+public class ArticleReviewPageQueryDTO {
 
     private String title;
-
-    /**
-     * 0 草稿，1 提交发布
-     */
-    private Integer status;
 
     /**
      * 0 待审，1 通过，2 驳回
      */
     private Integer auditStatus;
 
-    private Long categoryId;
+    private Integer pageNum = 1;
+
+    private Integer pageSize = 10;
 }

@@ -37,3 +37,24 @@ export function clearAuth() {
   clearToken();
   clearUserInfo();
 }
+
+export function getUserRole() {
+  const user = getUserInfo();
+  if (!user) {
+    return null;
+  }
+  const role = Number(user.role);
+  return Number.isFinite(role) ? role : null;
+}
+
+export function isAdminRole(role) {
+  return Number(role) === 1;
+}
+
+export function getHomePathByRole(role) {
+  return isAdminRole(role) ? "/admin" : "/user";
+}
+
+export function getCurrentHomePath() {
+  return getHomePathByRole(getUserRole());
+}

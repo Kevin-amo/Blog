@@ -1,21 +1,34 @@
 package blog.service.impl;
 
+import blog.common.Result.PageResult;
+import blog.common.constant.UserConstants;
+import blog.entity.dto.UserAdminPageQueryDTO;
+import blog.entity.dto.UserPasswordUpdateDTO;
+import blog.entity.dto.UserProfileUpdateDTO;
 import blog.entity.dto.UserRegisterDTO;
 import blog.entity.po.User;
+import blog.entity.vo.UserAdminPageVO;
 import blog.entity.vo.UserProfileVO;
+import blog.mapper.ArticleMapper;
 import blog.mapper.UserMapper;
+import blog.model.LoginUser;
 import blog.service.OssService;
 import blog.service.UserService;
 import blog.util.BCryptUtil;
+import blog.util.PermissionUtil;
 import blog.util.UserContext;
+import com.github.pagehelper.PageHelper;
+import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.List;
+
 /**
- * 用户相关业务实现。
+ * 用户服务实现
  */
 @Slf4j
 @Service
@@ -23,16 +36,12 @@ import org.springframework.web.multipart.MultipartFile;
 public class UserServiceImpl implements UserService {
 
     private final UserMapper userMapper;
+    private final ArticleMapper articleMapper;
     private final OssService ossService;
 
-    /**
-     * 用户注册：校验参数、加密密码并入库。
-     */
     @Override
     public void register(UserRegisterDTO registerDTO) {
-        String password = registerDTO.getPassword();
-        String rePassword = registerDTO.getRePassword();
-        if (!password.equals(rePassword)) {
+        if (!registerDTO.getPassword().equals(registerDTO.getRePassword())) {
             throw new RuntimeException("两次输入的密码不一致");
         }
 
@@ -44,37 +53,22 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         user.setUsername(registerDTO.getUsername());
         user.setPassword(BCryptUtil.encode(registerDTO.getPassword()));
-        // 昵称为空时默认使用用户名。
-        if (StringUtils.hasText(registerDTO.getNickname())) {
-            user.setNickname(registerDTO.getNickname());
-        } else {
-            user.setNickname(registerDTO.getUsername());
-        }
+        user.setNickname(StringUtils.hasText(registerDTO.getNickname()) ? registerDTO.getNickname() : registerDTO.getUsername());
         userMapper.insert(user);
     }
 
-    /**
-     * 返回当前登录用户信息。
-     */
     @Override
     public UserProfileVO me() {
         User user = loadCurrentUser();
-
         UserProfileVO profileVO = new UserProfileVO();
         profileVO.setUserId(user.getId());
         profileVO.setUsername(user.getUsername());
         profileVO.setNickname(user.getNickname());
         profileVO.setAvatar(user.getAvatar());
+        profileVO.setRole(user.getRole() == null ? UserConstants.ROLE_USER : user.getRole());
         return profileVO;
     }
 
-    /**
-     * 上传头像并更新数据库。
-     * 1) 先上传新头像
-     * 2) 再更新数据库
-     * 3) 数据库失败则回滚删除新头像
-     * 4) 成功后尝试删除旧头像（失败仅记录日志）
-     */
     @Override
     public String uploadAvatar(MultipartFile file) {
         User currentUser = loadCurrentUser();
@@ -90,9 +84,8 @@ public class UserServiceImpl implements UserService {
             try {
                 ossService.deleteObject(uploadResult.objectKey());
             } catch (Exception cleanupError) {
-                log.warn("头像回滚失败，新对象未删除：{}", uploadResult.objectKey(), cleanupError);
+                log.warn("头像回滚失败: {}", uploadResult.objectKey(), cleanupError);
             }
-
             if (e instanceof RuntimeException runtimeException) {
                 throw runtimeException;
             }
@@ -103,22 +96,91 @@ public class UserServiceImpl implements UserService {
             try {
                 ossService.deleteByUrl(oldAvatar);
             } catch (Exception e) {
-                log.warn("旧头像删除失败，url：{}", oldAvatar, e);
+                log.warn("旧头像删除失败: {}", oldAvatar, e);
             }
         }
         return uploadResult.fileUrl();
     }
 
-    /**
-     * 读取当前登录用户并做存在性校验。
-     */
+    @Override
+    public void updateProfile(UserProfileUpdateDTO dto) {
+        PermissionUtil.requireUser();
+        LoginUser loginUser = UserContext.getUser();
+        int rows = userMapper.updateNicknameById(loginUser.getUserId(), dto.getNickname().trim());
+        if (rows == 0) {
+            throw new RuntimeException("更新资料失败");
+        }
+    }
+
+    @Override
+    public void updatePassword(UserPasswordUpdateDTO dto) {
+        PermissionUtil.requireUser();
+        if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
+            throw new RuntimeException("两次输入的新密码不一致");
+        }
+        LoginUser loginUser = UserContext.getUser();
+        User user = userMapper.selectById(loginUser.getUserId());
+        if (user == null) {
+            throw new RuntimeException("用户不存在");
+        }
+        if (!BCryptUtil.match(dto.getOldPassword(), user.getPassword())) {
+            throw new RuntimeException("旧密码错误");
+        }
+        int rows = userMapper.updatePasswordById(user.getId(), BCryptUtil.encode(dto.getNewPassword()));
+        if (rows == 0) {
+            throw new RuntimeException("修改密码失败");
+        }
+    }
+
+    @Override
+    public PageResult<UserAdminPageVO> pageUsers(UserAdminPageQueryDTO queryDTO) {
+        PermissionUtil.requireAdmin();
+        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
+        List<UserAdminPageVO> list = userMapper.selectUserPage(queryDTO);
+        PageInfo<UserAdminPageVO> pageInfo = new PageInfo<>(list);
+        return new PageResult<>(pageInfo.getTotal(), pageInfo.getList());
+    }
+
+    @Override
+    public void updateUserStatus(Long userId, Integer status) {
+        PermissionUtil.requireAdmin();
+        if (!Integer.valueOf(UserConstants.STATUS_ENABLED).equals(status)
+                && !Integer.valueOf(UserConstants.STATUS_DISABLED).equals(status)) {
+            throw new RuntimeException("状态非法");
+        }
+        int rows = userMapper.updateStatusByIdAndRole(userId, UserConstants.ROLE_USER, status);
+        if (rows == 0) {
+            throw new RuntimeException("用户不存在或不可修改");
+        }
+    }
+
+    @Override
+    public void resetUserPassword(Long userId) {
+        PermissionUtil.requireAdmin();
+        String encodedPassword = BCryptUtil.encode(UserConstants.DEFAULT_RESET_PASSWORD);
+        int rows = userMapper.resetPasswordByIdAndRole(userId, UserConstants.ROLE_USER, encodedPassword);
+        if (rows == 0) {
+            throw new RuntimeException("用户不存在或不可重置密码");
+        }
+    }
+
+    @Override
+    public void deleteUser(Long userId) {
+        PermissionUtil.requireAdmin();
+        LoginUser admin = UserContext.getUser();
+        articleMapper.deleteByCreateBy(userId, admin.getUserId());
+        int rows = userMapper.deleteByIdAndRole(userId, UserConstants.ROLE_USER);
+        if (rows == 0) {
+            throw new RuntimeException("用户不存在或不可删除");
+        }
+    }
+
     private User loadCurrentUser() {
-        if (UserContext.getUser() == null || UserContext.getUser().getUserId() == null) {
+        LoginUser loginUser = UserContext.getUser();
+        if (loginUser == null || loginUser.getUserId() == null) {
             throw new RuntimeException("请先登录");
         }
-
-        Long userId = UserContext.getUser().getUserId();
-        User user = userMapper.selectById(userId);
+        User user = userMapper.selectById(loginUser.getUserId());
         if (user == null) {
             throw new RuntimeException("用户不存在");
         }

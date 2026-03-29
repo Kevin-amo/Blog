@@ -5,31 +5,30 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
- * 文章分页项
+ * 管理员审核分页项
  */
 @Data
-public class ArticlePageVO {
+public class ArticleReviewPageVO {
 
     private Long id;
 
     private String title;
 
-    private Long categoryId;
-
-    private String categoryName;
-
     private String summary;
 
-    private String coverImage;
+    private String content;
 
     private Integer status;
 
-    /**
-     * 0 待审核，1 通过，2 驳回
-     */
     private Integer auditStatus;
 
-    private Integer isTop;
+    private Long createBy;
+
+    private String authorUsername;
+
+    private String authorNickname;
 
     private LocalDateTime createTime;
+
+    private LocalDateTime updateTime;
 }

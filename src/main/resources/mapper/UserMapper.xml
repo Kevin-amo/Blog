@@ -5,31 +5,84 @@
 <mapper namespace="blog.mapper.UserMapper">
 
     <insert id="insert" parameterType="blog.entity.po.User">
-        insert into user (username, password, nickname, avatar, status, create_time, update_time)
-        values (#{username}, #{password}, #{nickname}, #{avatar}, 1, now(), now());
+        insert into user (username, password, nickname, avatar, role, status, create_time, update_time)
+        values (#{username}, #{password}, #{nickname}, #{avatar}, 0, 1, now(), now())
     </insert>
 
     <select id="selectByUsername" resultType="blog.entity.po.User">
-        select id, username, password, nickname, avatar, status, create_time, update_time
+        select id, username, password, nickname, avatar, role, status, create_time, update_time
         from user
         where username = #{username}
-            limit 1
+        limit 1
     </select>
 
-    <!-- 根据用户ID查询用户信息（含头像字段） -->
     <select id="selectById" resultType="blog.entity.po.User">
-        select id, username, password, nickname, avatar, status, create_time, update_time
+        select id, username, password, nickname, avatar, role, status, create_time, update_time
         from user
         where id = #{id}
         limit 1
     </select>
 
-    <!-- 更新用户头像URL -->
     <update id="updateAvatarById">
         update user
         set avatar = #{avatar},
             update_time = now()
         where id = #{id}
     </update>
+
+    <update id="updateNicknameById">
+        update user
+        set nickname = #{nickname},
+            update_time = now()
+        where id = #{id}
+    </update>
+
+    <update id="updatePasswordById">
+        update user
+        set password = #{password},
+            update_time = now()
+        where id = #{id}
+    </update>
+
+    <select id="selectUserPage" resultType="blog.entity.vo.UserAdminPageVO">
+        select id, username, nickname, avatar, role, status, create_time, update_time
+        from user
+        where role = 0
+        <if test="queryDTO != null">
+            <if test="queryDTO.username != null and queryDTO.username != ''">
+                and username like concat('%', #{queryDTO.username}, '%')
+            </if>
+            <if test="queryDTO.nickname != null and queryDTO.nickname != ''">
+                and nickname like concat('%', #{queryDTO.nickname}, '%')
+            </if>
+            <if test="queryDTO.status != null">
+                and status = #{queryDTO.status}
+            </if>
+        </if>
+        order by id desc
+    </select>
+
+    <update id="updateStatusByIdAndRole">
+        update user
+        set status = #{status},
+            update_time = now()
+        where id = #{id}
+          and role = #{role}
+    </update>
+
+    <update id="resetPasswordByIdAndRole">
+        update user
+        set password = #{password},
+            update_time = now()
+        where id = #{id}
+          and role = #{role}
+    </update>
+
+    <delete id="deleteByIdAndRole">
+        delete
+        from user
+        where id = #{id}
+          and role = #{role}
+    </delete>
 
 </mapper>

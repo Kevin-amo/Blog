@@ -297,7 +297,7 @@ async function runAutoSaveDraft() {
       if (createdId > 0) {
         draftArticleId.value = createdId;
         if (!articleId.value) {
-          await router.replace(`/admin/articles/${createdId}/edit`);
+          await router.replace(`/user/articles/${createdId}/edit`);
         }
       }
     }
@@ -332,7 +332,7 @@ async function flushAutoSave() {
 
 async function goBack() {
   await flushAutoSave();
-  router.push("/admin");
+  router.push("/user");
 }
 
 function applyContentAndSelection(nextValue, start, end) {
@@ -516,7 +516,7 @@ async function submitArticle() {
 
     hasPendingChanges.value = false;
     clearLocalDraft();
-    router.push("/admin");
+    router.push("/user");
   } catch (error) {
     errorMsg.value = error.response?.data?.message || error.message || "发布失败";
   } finally {

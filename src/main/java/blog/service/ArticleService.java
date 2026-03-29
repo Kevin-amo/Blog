@@ -4,76 +4,38 @@ import blog.common.Result.PageResult;
 import blog.entity.dto.ArticleAddDTO;
 import blog.entity.dto.ArticlePageQueryDTO;
 import blog.entity.dto.ArticleQueryDTO;
+import blog.entity.dto.ArticleReviewPageQueryDTO;
 import blog.entity.dto.ArticleUpdateDTO;
 import blog.entity.vo.ArticlePageVO;
+import blog.entity.vo.ArticleReviewPageVO;
 import blog.entity.vo.ArticleVO;
 
 import java.util.List;
 
 /**
- * @author admin
+ * 文章服务
  */
 public interface ArticleService {
 
-    /**
-     * 添加文章
-     *
-     * @param addDTO 添加参数
-     */
     Long add(ArticleAddDTO addDTO);
 
-    /**
-     * 查询当前登录用户的文章列表
-     *
-     * @param queryDTO 查询条件
-     * @return 文章列表
-     */
     List<ArticleVO> list(ArticleQueryDTO queryDTO);
 
-    /**
-     * 查询公开的已发布文章列表（游客可访问）
-     *
-     * @param queryDTO 查询条件
-     * @return 文章列表
-     */
     List<ArticleVO> listPublished(ArticleQueryDTO queryDTO);
 
-    /**
-     * 查询文章详情
-     *
-     * @param id 文章ID
-     * @return 文章详情
-     */
     ArticleVO detail(Long id);
 
-    /**
-     * 查询公开的已发布文章详情（游客可访问）
-     *
-     * @param id 文章ID
-     * @return 文章详情
-     */
     ArticleVO detailPublished(Long id);
 
-    /**
-     * 修改文章
-     *
-     * @param updateDTO 修改参数
-     */
+    ArticleVO detailForAdmin(Long id);
+
     void update(ArticleUpdateDTO updateDTO);
 
-    /**
-     * 删除文章
-     *
-     * @param id 文章ID
-     */
     void delete(Long id);
 
-    /**
-     * 文章分页列表
-     *
-     * @param queryDTO 查询条件
-     * @return 分页结果
-     */
     PageResult<ArticlePageVO> page(ArticlePageQueryDTO queryDTO);
 
+    PageResult<ArticleReviewPageVO> reviewPage(ArticleReviewPageQueryDTO queryDTO);
+
+    void audit(Long id, Integer auditStatus);
 }

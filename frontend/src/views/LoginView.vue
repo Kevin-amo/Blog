@@ -58,7 +58,7 @@
 import { reactive, ref } from "vue";
 import { useRoute, useRouter } from "vue-router";
 import { loginApi } from "../api/auth";
-import { setToken, setUserInfo } from "../utils/auth";
+import { getHomePathByRole, setToken, setUserInfo } from "../utils/auth";
 
 const router = useRouter();
 const route = useRoute();
@@ -110,11 +110,12 @@ async function handleLogin() {
       userId: res.data.userId,
       username: res.data.username,
       nickname: res.data.nickname,
+      role: Number(res.data.role ?? 0),
       // 登录成功后缓存头像，首页可直接回显。
       avatar: res.data.avatar || ""
     });
 
-    router.push("/admin");
+    router.push(getHomePathByRole(res.data.role));
   } catch (error) {
     errorMsg.value =
       error.response?.data?.message || error.message || "网络异常，请稍后重试";
