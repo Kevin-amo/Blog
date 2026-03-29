@@ -79,6 +79,14 @@ if (route.query.registered === "1") {
   }
 }
 
+function resolvePostLoginPath(role) {
+  const redirect = route.query.redirect;
+  if (typeof redirect === "string" && redirect.startsWith("/") && !redirect.startsWith("//")) {
+    return redirect;
+  }
+  return getHomePathByRole(role);
+}
+
 async function handleLogin() {
   if (!form.username || !form.password) {
     errorMsg.value = "请输入用户名和密码";
@@ -115,7 +123,7 @@ async function handleLogin() {
       avatar: res.data.avatar || ""
     });
 
-    router.push(getHomePathByRole(res.data.role));
+    router.push(resolvePostLoginPath(res.data.role));
   } catch (error) {
     errorMsg.value =
       error.response?.data?.message || error.message || "网络异常，请稍后重试";

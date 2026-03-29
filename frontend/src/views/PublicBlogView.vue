@@ -5,9 +5,15 @@
         <p class="eyebrow">Wavelog Blog</p>
         <h1>我的博客</h1>
       </div>
-      <div v-if="isLoggedIn" class="public-user-avatar" :title="displayName">
-        <img v-if="user.avatar" :src="user.avatar" alt="用户头像" />
-        <span v-else class="public-user-fallback">{{ avatarFallback }}</span>
+      <div class="admin-user-menu" @click.stop>
+        <button class="admin-avatar-btn" type="button" :title="avatarTitle" @click="toggleUserMenu">
+          <img v-if="isLoggedIn && user.avatar" :src="user.avatar" alt="用户头像" />
+          <span v-else class="admin-avatar-fallback">{{ avatarFallback }}</span>
+        </button>
+        <div v-if="isLoggedIn && showUserMenu" class="admin-user-dropdown">
+          <button type="button" @click="goToDashboard">进入后台</button>
+          <button type="button" @click="handleLogout">退出登录</button>
+        </div>
       </div>
     </header>
 
@@ -45,18 +51,19 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, onUnmounted, ref } from "vue";
 import { useRouter } from "vue-router";
+import { logoutApi } from "../api/auth";
 import { publicListArticleApi } from "../api/article";
-import { getToken, getUserInfo } from "../utils/auth";
+import { clearAuth, getCurrentHomePath, getToken, getUserInfo } from "../utils/auth";
 import { extractPlainText } from "../utils/markdown";
 
 const router = useRouter();
 const articles = ref([]);
 const loading = ref(false);
 const errorMsg = ref("");
+const showUserMenu = ref(false);
 
-// 公开页仅使用本地登录态展示头像，避免额外鉴权请求影响公共访问。
 const cachedUser = getUserInfo();
 const user = ref({
   username: cachedUser?.username || "",
@@ -65,8 +72,9 @@ const user = ref({
 });
 const isLoggedIn = ref(Boolean(getToken() && cachedUser));
 const displayName = computed(() => user.value.nickname || user.value.username || "已登录用户");
+const avatarTitle = computed(() => (isLoggedIn.value ? displayName.value : "点击登录"));
 const avatarFallback = computed(() => {
-  const source = user.value.nickname || user.value.username || "U";
+  const source = isLoggedIn.value ? user.value.nickname || user.value.username || "U" : "登";
   return source.slice(0, 1).toUpperCase();
 });
 
@@ -88,14 +96,12 @@ function brief(content) {
 async function loadList() {
   loading.value = true;
   errorMsg.value = "";
-
   try {
     const res = await publicListArticleApi();
     if (res.code !== 200) {
       errorMsg.value = res.message || "获取文章列表失败";
       return;
     }
-
     articles.value = Array.isArray(res.data) ? res.data : [];
   } catch (error) {
     errorMsg.value = error.response?.data?.message || error.message || "获取文章列表失败";
@@ -109,7 +115,56 @@ function openArticle(id) {
   window.open(href, "_blank", "noopener");
 }
 
+function closeUserMenu() {
+  showUserMenu.value = false;
+}
+
+function goToLogin() {
+  closeUserMenu();
+  router.push({
+    path: "/login",
+    query: {
+      redirect: router.resolve({ name: "public-blog" }).fullPath
+    }
+  });
+}
+
+function toggleUserMenu() {
+  if (!isLoggedIn.value) {
+    goToLogin();
+    return;
+  }
+  showUserMenu.value = !showUserMenu.value;
+}
+
+function goToDashboard() {
+  closeUserMenu();
+  router.push(getCurrentHomePath());
+}
+
+async function handleLogout() {
+  closeUserMenu();
+  try {
+    await logoutApi();
+  } catch {
+    // 后端无状态登出，忽略异常
+  } finally {
+    clearAuth();
+    isLoggedIn.value = false;
+    user.value = {
+      username: "",
+      nickname: "",
+      avatar: ""
+    };
+  }
+}
+
 onMounted(() => {
+  document.addEventListener("click", closeUserMenu);
   loadList();
+});
+
+onUnmounted(() => {
+  document.removeEventListener("click", closeUserMenu);
 });
 </script>
