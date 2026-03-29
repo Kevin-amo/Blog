@@ -15,3 +15,8 @@ export function logoutApi() {
 export function getMyProfileApi() {
   return request.get("/user/me");
 }
+
+// 上传用户头像（multipart/form-data）。
+export function uploadAvatarApi(formData) {
+  return request.post("/user/avatar", formData);
+}

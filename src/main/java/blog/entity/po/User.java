@@ -23,7 +23,6 @@ public class User {
 
     /**
      * 密码
-     * TODO 后续加密
      */
     private String password;
 
@@ -31,6 +30,11 @@ public class User {
      * 昵称
      */
     private String nickname;
+
+    /**
+     * 头像地址
+     */
+    private String avatar;
 
     /**
      * 状态(1启用0禁用)

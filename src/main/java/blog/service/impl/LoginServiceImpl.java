@@ -50,6 +50,7 @@ public class LoginServiceImpl implements LoginService {
         result.put("userId", user.getId());
         result.put("username", user.getUsername());
         result.put("nickname", user.getNickname());
+        result.put("avatar", user.getAvatar());
         return result;
     }
 }

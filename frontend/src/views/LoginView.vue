@@ -109,7 +109,9 @@ async function handleLogin() {
     setUserInfo({
       userId: res.data.userId,
       username: res.data.username,
-      nickname: res.data.nickname
+      nickname: res.data.nickname,
+      // 登录成功后缓存头像，首页可直接回显。
+      avatar: res.data.avatar || ""
     });
 
     router.push("/admin");

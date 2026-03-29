@@ -5,15 +5,31 @@
 <mapper namespace="blog.mapper.UserMapper">
 
     <insert id="insert" parameterType="blog.entity.po.User">
-        insert into user (username, password, nickname, status, create_time, update_time)
-        values (#{username}, #{password}, #{nickname}, 1, now(), now());
+        insert into user (username, password, nickname, avatar, status, create_time, update_time)
+        values (#{username}, #{password}, #{nickname}, #{avatar}, 1, now(), now());
     </insert>
 
     <select id="selectByUsername" resultType="blog.entity.po.User">
-        select id, username, password, nickname, status, create_time, update_time
+        select id, username, password, nickname, avatar, status, create_time, update_time
         from user
         where username = #{username}
             limit 1
     </select>
+
+    <!-- 根据用户ID查询用户信息（含头像字段） -->
+    <select id="selectById" resultType="blog.entity.po.User">
+        select id, username, password, nickname, avatar, status, create_time, update_time
+        from user
+        where id = #{id}
+        limit 1
+    </select>
+
+    <!-- 更新用户头像URL -->
+    <update id="updateAvatarById">
+        update user
+        set avatar = #{avatar},
+            update_time = now()
+        where id = #{id}
+    </update>
 
 </mapper>

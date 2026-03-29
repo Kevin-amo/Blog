@@ -16,16 +16,54 @@
     <section class="panel profile-panel">
       <div class="panel-title">当前登录信息</div>
       <div v-if="loadingProfile" class="muted">正在加载用户信息...</div>
-      <div v-else class="profile-grid">
-        <div>
-          <p class="field">用户ID</p>
-          <p class="value">{{ user.userId || "-" }}</p>
+      <div v-else class="profile-wrap">
+        <div class="avatar-panel">
+          <div class="avatar-preview">
+            <img v-if="user.avatar" :src="user.avatar" alt="用户头像" />
+            <div v-else class="avatar-fallback">{{ avatarFallback }}</div>
+          </div>
+          <div class="avatar-actions">
+            <input
+              ref="avatarInputRef"
+              class="avatar-file-input"
+              type="file"
+              accept="image/jpeg,image/png"
+              @change="handleAvatarFileChange"
+            />
+            <div class="avatar-select-row">
+              <button
+                class="ghost-btn avatar-select-btn"
+                type="button"
+                :disabled="uploadingAvatar"
+                @click="triggerAvatarPicker"
+              >
+                选择头像
+              </button>
+              <span class="avatar-file-name">{{ selectedAvatarFileName }}</span>
+            </div>
+            <button class="submit-btn avatar-upload-btn" type="button" :disabled="uploadingAvatar" @click="submitAvatar">
+              {{ uploadingAvatar ? "上传中..." : "上传头像" }}
+            </button>
+          </div>
+          <p class="muted avatar-tips">仅支持 jpg/jpeg/png，大小不超过 5MB</p>
         </div>
-        <div>
-          <p class="field">用户名</p>
-          <p class="value">{{ user.username || "-" }}</p>
+
+        <div class="profile-grid">
+          <div>
+            <p class="field">用户ID</p>
+            <p class="value">{{ user.userId || "-" }}</p>
+          </div>
+          <div>
+            <p class="field">用户名</p>
+            <p class="value">{{ user.username || "-" }}</p>
+          </div>
+          <div>
+            <p class="field">昵称</p>
+            <p class="value">{{ user.nickname || "-" }}</p>
+          </div>
         </div>
       </div>
+      <p v-if="avatarError" class="error-msg">{{ avatarError }}</p>
       <p v-if="profileError" class="error-msg">{{ profileError }}</p>
     </section>
 
@@ -324,7 +362,7 @@
 <script setup>
 import { computed, onMounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
-import { getMyProfileApi, logoutApi } from "../api/auth";
+import { getMyProfileApi, logoutApi, uploadAvatarApi } from "../api/auth";
 import { deleteArticleApi, pageArticleApi } from "../api/article";
 import {
   addCategoryApi,
@@ -334,7 +372,7 @@ import {
   pageCategoryApi,
   updateCategoryApi
 } from "../api/category";
-import { clearAuth, getUserInfo } from "../utils/auth";
+import { clearAuth, getUserInfo, setUserInfo } from "../utils/auth";
 
 const router = useRouter();
 
@@ -343,11 +381,17 @@ const activeTab = ref("article");
 const localUser = getUserInfo();
 const user = ref({
   userId: localUser?.userId || "",
-  username: localUser?.username || ""
+  username: localUser?.username || "",
+  nickname: localUser?.nickname || "",
+  avatar: localUser?.avatar || ""
 });
 
 const loadingProfile = ref(false);
 const profileError = ref("");
+const uploadingAvatar = ref(false);
+const avatarError = ref("");
+const selectedAvatarFile = ref(null);
+const avatarInputRef = ref(null);
 
 const categoryOptions = ref([]);
 const categoryNameMap = computed(() => {
@@ -403,8 +447,13 @@ const categoryEditor = reactive({
 const showLogoutConfirm = ref(false);
 const loggingOut = ref(false);
 
-const displayName = computed(() => user.value.username || "朋友");
+const displayName = computed(() => user.value.nickname || user.value.username || "朋友");
 const greeting = computed(() => `欢迎回来，${displayName.value}`);
+const avatarFallback = computed(() => {
+  const source = user.value.nickname || user.value.username || "U";
+  return source.slice(0, 1).toUpperCase();
+});
+const selectedAvatarFileName = computed(() => selectedAvatarFile.value?.name || "未选择文件");
 const today = computed(() => {
   return new Date().toLocaleDateString("zh-CN", {
     year: "numeric",
@@ -451,12 +500,83 @@ async function loadProfile() {
 
     user.value = {
       userId: res.data?.userId || "",
-      username: res.data?.username || ""
+      username: res.data?.username || "",
+      nickname: res.data?.nickname || "",
+      avatar: res.data?.avatar || ""
     };
+    setUserInfo(user.value);
   } catch (error) {
     profileError.value = error.response?.data?.message || "请求失败，请检查后端服务是否已启动";
   } finally {
     loadingProfile.value = false;
+  }
+}
+
+function resetAvatarInput() {
+  selectedAvatarFile.value = null;
+  if (avatarInputRef.value) {
+    avatarInputRef.value.value = "";
+  }
+}
+
+function triggerAvatarPicker() {
+  if (uploadingAvatar.value) {
+    return;
+  }
+  avatarInputRef.value?.click();
+}
+
+function handleAvatarFileChange(event) {
+  avatarError.value = "";
+  const file = event.target?.files?.[0] || null;
+  selectedAvatarFile.value = file;
+}
+
+function validateSelectedAvatar(file) {
+  if (!file) {
+    return "请先选择头像文件";
+  }
+
+  const acceptedTypes = new Set(["image/jpeg", "image/jpg", "image/png"]);
+  if (!acceptedTypes.has((file.type || "").toLowerCase())) {
+    return "仅支持 jpg/jpeg/png 格式";
+  }
+
+  const maxSize = 5 * 1024 * 1024;
+  if (file.size > maxSize) {
+    return "头像大小不能超过 5MB";
+  }
+
+  return "";
+}
+
+async function submitAvatar() {
+  if (uploadingAvatar.value) {
+    return;
+  }
+
+  avatarError.value = validateSelectedAvatar(selectedAvatarFile.value);
+  if (avatarError.value) {
+    return;
+  }
+
+  const formData = new FormData();
+  formData.append("file", selectedAvatarFile.value);
+
+  uploadingAvatar.value = true;
+  try {
+    const res = await uploadAvatarApi(formData);
+    if (res.code !== 200) {
+      avatarError.value = res.message || "头像上传失败";
+      return;
+    }
+
+    resetAvatarInput();
+    await loadProfile();
+  } catch (error) {
+    avatarError.value = error.response?.data?.message || error.message || "头像上传失败";
+  } finally {
+    uploadingAvatar.value = false;
   }
 }
 

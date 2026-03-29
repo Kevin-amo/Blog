@@ -1,9 +1,13 @@
 <template>
   <main class="home-page public-blog-page">
-    <header class="topbar">
+    <header class="topbar public-topbar">
       <div>
         <p class="eyebrow">Wavelog Blog</p>
         <h1>我的博客</h1>
+      </div>
+      <div v-if="isLoggedIn" class="public-user-avatar" :title="displayName">
+        <img v-if="user.avatar" :src="user.avatar" alt="用户头像" />
+        <span v-else class="public-user-fallback">{{ avatarFallback }}</span>
       </div>
     </header>
 
@@ -41,15 +45,30 @@
 </template>
 
 <script setup>
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { publicListArticleApi } from "../api/article";
+import { getToken, getUserInfo } from "../utils/auth";
 import { extractPlainText } from "../utils/markdown";
 
 const router = useRouter();
 const articles = ref([]);
 const loading = ref(false);
 const errorMsg = ref("");
+
+// 公开页仅使用本地登录态展示头像，避免额外鉴权请求影响公共访问。
+const cachedUser = getUserInfo();
+const user = ref({
+  username: cachedUser?.username || "",
+  nickname: cachedUser?.nickname || "",
+  avatar: cachedUser?.avatar || ""
+});
+const isLoggedIn = ref(Boolean(getToken() && cachedUser));
+const displayName = computed(() => user.value.nickname || user.value.username || "已登录用户");
+const avatarFallback = computed(() => {
+  const source = user.value.nickname || user.value.username || "U";
+  return source.slice(0, 1).toUpperCase();
+});
 
 function formatDate(raw) {
   if (!raw) {
