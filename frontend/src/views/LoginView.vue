@@ -37,11 +37,17 @@
             />
           </label>
 
+          <p v-if="successMsg" class="success-msg">{{ successMsg }}</p>
           <p v-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
 
           <button :disabled="loading" type="submit" class="submit-btn">
             {{ loading ? "登录中..." : "立即登录" }}
           </button>
+
+          <p class="auth-switch">
+            还没有账号？
+            <RouterLink to="/register">立即注册</RouterLink>
+          </p>
         </form>
       </section>
     </section>
@@ -50,11 +56,12 @@
 
 <script setup>
 import { reactive, ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 import { loginApi } from "../api/auth";
 import { setToken, setUserInfo } from "../utils/auth";
 
 const router = useRouter();
+const route = useRoute();
 
 const form = reactive({
   username: "",
@@ -63,6 +70,14 @@ const form = reactive({
 
 const loading = ref(false);
 const errorMsg = ref("");
+const successMsg = ref("");
+
+if (route.query.registered === "1") {
+  successMsg.value = "注册成功，请登录";
+  if (typeof route.query.username === "string" && route.query.username) {
+    form.username = route.query.username;
+  }
+}
 
 async function handleLogin() {
   if (!form.username || !form.password) {

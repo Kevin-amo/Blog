@@ -1,11 +1,15 @@
 import request from "../utils/request";
 
 export function loginApi(payload) {
-  return request.post("/auth/login", payload);
+  return request.post("/user/login", payload);
+}
+
+export function registerApi(payload) {
+  return request.post("/user/register", payload);
 }
 
 export function logoutApi() {
-  return request.post("/auth/logout");
+  return request.post("/user/logout");
 }
 
 export function getMyProfileApi() {

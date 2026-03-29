@@ -8,7 +8,7 @@ import java.util.Map;
  * @author admin
  * 认证业务接口
  */
-public interface AuthService {
+public interface LoginService {
 
     Map<String, Object> login(LoginDTO loginDTO);
 

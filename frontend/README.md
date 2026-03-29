@@ -24,7 +24,7 @@ http://localhost:5173
 ## 接口说明
 
 - 登录：`POST /auth/login`
-- 获取当前用户：`GET /user/me`
+- 获取当前用户：`GET /auth/me`
 - 退出登录：`POST /auth/logout`
 
 开发环境默认通过 Vite 代理将 `/api/*` 转发到 `http://localhost:8081`。

@@ -3,7 +3,8 @@ package blog.service.impl;
 import blog.entity.po.User;
 import blog.entity.dto.LoginDTO;
 import blog.mapper.UserMapper;
-import blog.service.AuthService;
+import blog.service.LoginService;
+import blog.util.BCryptUtil;
 import blog.util.JwtUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
@@ -16,7 +17,7 @@ import java.util.Map;
  */
 @Service
 @RequiredArgsConstructor
-public class AuthServiceImpl implements AuthService {
+public class LoginServiceImpl implements LoginService {
 
     private final UserMapper userMapper;
 
@@ -35,8 +36,8 @@ public class AuthServiceImpl implements AuthService {
         if (user.getStatus() == 0) {
             throw new RuntimeException("该用户已被封禁！");
         }
-        // 密码核对 TODO 后期加密
-        if (!user.getPassword().equals(loginDTO.getPassword())) {
+        // 密码核对
+        if (!BCryptUtil.match(loginDTO.getPassword(), user.getPassword())) {
             throw new RuntimeException("密码错误，请重试！");
         }
 
