@@ -5,6 +5,8 @@ import jakarta.validation.constraints.Size;
 import lombok.Data;
 
 /**
+ * @author admin
+ *
  * 修改个人资料 DTO
  */
 @Data

@@ -3,6 +3,8 @@ package blog.entity.dto;
 import lombok.Data;
 
 /**
+ * @author admin
+ *
  * 文章分页查询 DTO
  */
 @Data

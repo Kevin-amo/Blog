@@ -5,6 +5,8 @@ import lombok.Data;
 import java.time.LocalDateTime;
 
 /**
+ * @author admin
+ *
  * 文章视图对象
  */
 @Data

@@ -12,6 +12,8 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
 
 /**
+ * @author admin
+ *
  * 登录拦截器
  */
 @Component

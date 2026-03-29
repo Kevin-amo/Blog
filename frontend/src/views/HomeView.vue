@@ -19,7 +19,7 @@
       <div v-else class="profile-wrap">
         <div class="avatar-panel">
           <div class="avatar-preview">
-            <img v-if="user.avatar" :src="user.avatar" alt="用户头像" />
+            <img v-if="avatarPreviewSrc" :src="avatarPreviewSrc" alt="用户头像" />
             <div v-else class="avatar-fallback">{{ avatarFallback }}</div>
           </div>
           <div class="avatar-actions">
@@ -360,7 +360,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, reactive, ref } from "vue";
+import { computed, onMounted, onUnmounted, reactive, ref } from "vue";
 import { useRouter } from "vue-router";
 import { getMyProfileApi, logoutApi, uploadAvatarApi } from "../api/auth";
 import { deleteArticleApi, pageArticleApi } from "../api/article";
@@ -391,6 +391,7 @@ const profileError = ref("");
 const uploadingAvatar = ref(false);
 const avatarError = ref("");
 const selectedAvatarFile = ref(null);
+const selectedAvatarPreviewUrl = ref("");
 const avatarInputRef = ref(null);
 
 const categoryOptions = ref([]);
@@ -454,6 +455,7 @@ const avatarFallback = computed(() => {
   return source.slice(0, 1).toUpperCase();
 });
 const selectedAvatarFileName = computed(() => selectedAvatarFile.value?.name || "未选择文件");
+const avatarPreviewSrc = computed(() => selectedAvatarPreviewUrl.value || user.value.avatar || "");
 const today = computed(() => {
   return new Date().toLocaleDateString("zh-CN", {
     year: "numeric",
@@ -487,6 +489,25 @@ function normalizePageData(data) {
   };
 }
 
+function withAvatarCacheBust(url) {
+  if (!url) {
+    return "";
+  }
+  const hashIndex = url.indexOf("#");
+  const hash = hashIndex >= 0 ? url.slice(hashIndex) : "";
+  const base = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+  const separator = base.includes("?") ? "&" : "?";
+  return `${base}${separator}_t=${Date.now()}${hash}`;
+}
+
+function clearSelectedAvatarPreview() {
+  if (!selectedAvatarPreviewUrl.value) {
+    return;
+  }
+  URL.revokeObjectURL(selectedAvatarPreviewUrl.value);
+  selectedAvatarPreviewUrl.value = "";
+}
+
 async function loadProfile() {
   loadingProfile.value = true;
   profileError.value = "";
@@ -502,7 +523,7 @@ async function loadProfile() {
       userId: res.data?.userId || "",
       username: res.data?.username || "",
       nickname: res.data?.nickname || "",
-      avatar: res.data?.avatar || ""
+      avatar: withAvatarCacheBust(res.data?.avatar || "")
     };
     setUserInfo(user.value);
   } catch (error) {
@@ -513,6 +534,7 @@ async function loadProfile() {
 }
 
 function resetAvatarInput() {
+  clearSelectedAvatarPreview();
   selectedAvatarFile.value = null;
   if (avatarInputRef.value) {
     avatarInputRef.value.value = "";
@@ -527,9 +549,15 @@ function triggerAvatarPicker() {
 }
 
 function handleAvatarFileChange(event) {
-  avatarError.value = "";
   const file = event.target?.files?.[0] || null;
+  avatarError.value = validateSelectedAvatar(file);
+  clearSelectedAvatarPreview();
+  if (avatarError.value || !file) {
+    selectedAvatarFile.value = null;
+    return;
+  }
   selectedAvatarFile.value = file;
+  selectedAvatarPreviewUrl.value = URL.createObjectURL(file);
 }
 
 function validateSelectedAvatar(file) {
@@ -571,8 +599,18 @@ async function submitAvatar() {
       return;
     }
 
+    const uploadedAvatar = res.data?.avatarUrl || "";
+    if (uploadedAvatar) {
+      user.value = {
+        ...user.value,
+        avatar: withAvatarCacheBust(uploadedAvatar)
+      };
+      setUserInfo(user.value);
+    }
     resetAvatarInput();
-    await loadProfile();
+    if (!uploadedAvatar) {
+      await loadProfile();
+    }
   } catch (error) {
     avatarError.value = error.response?.data?.message || error.message || "头像上传失败";
   } finally {
@@ -915,5 +953,9 @@ async function confirmLogout() {
 
 onMounted(async () => {
   await Promise.all([loadProfile(), loadCategoryOptions(), loadArticlesPage(), loadCategoryPage()]);
+});
+
+onUnmounted(() => {
+  clearSelectedAvatarPreview();
 });
 </script>

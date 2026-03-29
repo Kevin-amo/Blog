@@ -155,7 +155,7 @@
                 :disabled="uploadingAvatar"
                 @click="triggerAvatarPicker"
               >
-                <img v-if="user.avatar" :src="user.avatar" alt="用户头像" />
+                <img v-if="avatarPreviewSrc" :src="avatarPreviewSrc" alt="用户头像" />
                 <div v-else class="avatar-fallback">{{ avatarFallback }}</div>
               </button>
 
@@ -251,6 +251,7 @@ const showUserMenu = ref(false);
 const uploadingAvatar = ref(false);
 const avatarError = ref("");
 const selectedAvatarFile = ref(null);
+const selectedAvatarPreviewUrl = ref("");
 const avatarInputRef = ref(null);
 
 const savingProfile = ref(false);
@@ -302,6 +303,7 @@ const avatarFallback = computed(() => {
   return source.slice(0, 1).toUpperCase();
 });
 const selectedAvatarFileName = computed(() => selectedAvatarFile.value?.name || "未选择文件");
+const avatarPreviewSrc = computed(() => selectedAvatarPreviewUrl.value || user.value.avatar || "");
 const articleTotalPages = computed(() => Math.max(1, Math.ceil(articlePager.total / articlePager.pageSize) || 1));
 
 function getAuditLabel(auditStatus) {
@@ -328,6 +330,25 @@ function normalizePageData(data) {
   };
 }
 
+function withAvatarCacheBust(url) {
+  if (!url) {
+    return "";
+  }
+  const hashIndex = url.indexOf("#");
+  const hash = hashIndex >= 0 ? url.slice(hashIndex) : "";
+  const base = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+  const separator = base.includes("?") ? "&" : "?";
+  return `${base}${separator}_t=${Date.now()}${hash}`;
+}
+
+function clearSelectedAvatarPreview() {
+  if (!selectedAvatarPreviewUrl.value) {
+    return;
+  }
+  URL.revokeObjectURL(selectedAvatarPreviewUrl.value);
+  selectedAvatarPreviewUrl.value = "";
+}
+
 function toggleUserMenu() {
   showUserMenu.value = !showUserMenu.value;
 }
@@ -350,6 +371,7 @@ function closeProfileEditor() {
     return;
   }
   showProfileEditor.value = false;
+  resetAvatarInput();
 }
 
 async function loadProfile() {
@@ -365,7 +387,7 @@ async function loadProfile() {
       userId: res.data?.userId || "",
       username: res.data?.username || "",
       nickname: res.data?.nickname || "",
-      avatar: res.data?.avatar || "",
+      avatar: withAvatarCacheBust(res.data?.avatar || ""),
       role: Number(res.data?.role ?? 0)
     };
     nicknameForm.nickname = user.value.nickname;
@@ -385,11 +407,19 @@ function triggerAvatarPicker() {
 }
 
 function handleAvatarFileChange(event) {
-  avatarError.value = "";
-  selectedAvatarFile.value = event.target?.files?.[0] || null;
+  const file = event.target?.files?.[0] || null;
+  avatarError.value = validateSelectedAvatar(file);
+  clearSelectedAvatarPreview();
+  if (avatarError.value || !file) {
+    selectedAvatarFile.value = null;
+    return;
+  }
+  selectedAvatarFile.value = file;
+  selectedAvatarPreviewUrl.value = URL.createObjectURL(file);
 }
 
 function resetAvatarInput() {
+  clearSelectedAvatarPreview();
   selectedAvatarFile.value = null;
   if (avatarInputRef.value) {
     avatarInputRef.value.value = "";
@@ -428,8 +458,18 @@ async function submitAvatar() {
       avatarError.value = res.message || "头像上传失败";
       return;
     }
+    const uploadedAvatar = res.data?.avatarUrl || "";
+    if (uploadedAvatar) {
+      user.value = {
+        ...user.value,
+        avatar: withAvatarCacheBust(uploadedAvatar)
+      };
+      setUserInfo(user.value);
+    }
     resetAvatarInput();
-    await loadProfile();
+    if (!uploadedAvatar) {
+      await loadProfile();
+    }
   } catch (error) {
     avatarError.value = error.response?.data?.message || error.message || "头像上传失败";
   } finally {

@@ -431,7 +431,7 @@
                 :disabled="uploadingProfileAvatar"
                 @click="triggerProfileAvatarPicker"
               >
-                <img v-if="adminProfile.avatar" :src="adminProfile.avatar" alt="用户头像" />
+                <img v-if="profileAvatarPreviewSrc" :src="profileAvatarPreviewSrc" alt="用户头像" />
                 <div v-else class="avatar-fallback">{{ adminAvatarFallback }}</div>
               </button>
 
@@ -557,6 +557,7 @@ const showUserMenu = ref(false);
 const uploadingProfileAvatar = ref(false);
 const profileAvatarError = ref("");
 const selectedProfileAvatarFile = ref(null);
+const selectedProfileAvatarPreviewUrl = ref("");
 const profileAvatarInputRef = ref(null);
 const savingProfile = ref(false);
 const profileUpdateError = ref("");
@@ -633,6 +634,7 @@ const adminAvatarFallback = computed(() => {
   return source.slice(0, 1).toUpperCase();
 });
 const selectedProfileAvatarFileName = computed(() => selectedProfileAvatarFile.value?.name || "未选择文件");
+const profileAvatarPreviewSrc = computed(() => selectedProfileAvatarPreviewUrl.value || adminProfile.value.avatar || "");
 const reviewDetailHtml = computed(() => {
   if (!reviewDetail.value?.content) {
     return "<p class='muted'>暂无正文</p>";
@@ -664,6 +666,25 @@ function normalizePageData(data) {
   };
 }
 
+function withAvatarCacheBust(url) {
+  if (!url) {
+    return "";
+  }
+  const hashIndex = url.indexOf("#");
+  const hash = hashIndex >= 0 ? url.slice(hashIndex) : "";
+  const base = hashIndex >= 0 ? url.slice(0, hashIndex) : url;
+  const separator = base.includes("?") ? "&" : "?";
+  return `${base}${separator}_t=${Date.now()}${hash}`;
+}
+
+function clearProfileAvatarPreview() {
+  if (!selectedProfileAvatarPreviewUrl.value) {
+    return;
+  }
+  URL.revokeObjectURL(selectedProfileAvatarPreviewUrl.value);
+  selectedProfileAvatarPreviewUrl.value = "";
+}
+
 function notify(type, message) {
   if (!message) {
     return;
@@ -688,6 +709,7 @@ function resetPasswordForm() {
 }
 
 function resetProfileAvatarInput() {
+  clearProfileAvatarPreview();
   selectedProfileAvatarFile.value = null;
   if (profileAvatarInputRef.value) {
     profileAvatarInputRef.value.value = "";
@@ -723,7 +745,7 @@ async function loadMyProfile({ silent = false } = {}) {
       userId: res.data?.userId || "",
       username: res.data?.username || "",
       nickname: res.data?.nickname || "",
-      avatar: res.data?.avatar || "",
+      avatar: withAvatarCacheBust(res.data?.avatar || ""),
       role: Number(res.data?.role ?? 1)
     };
     profileForm.nickname = adminProfile.value.nickname || "";
@@ -776,8 +798,15 @@ function triggerProfileAvatarPicker() {
 }
 
 function handleProfileAvatarFileChange(event) {
-  profileAvatarError.value = "";
-  selectedProfileAvatarFile.value = event.target?.files?.[0] || null;
+  const file = event.target?.files?.[0] || null;
+  profileAvatarError.value = validateAvatarFile(file);
+  clearProfileAvatarPreview();
+  if (profileAvatarError.value || !file) {
+    selectedProfileAvatarFile.value = null;
+    return;
+  }
+  selectedProfileAvatarFile.value = file;
+  selectedProfileAvatarPreviewUrl.value = URL.createObjectURL(file);
 }
 
 async function submitProfileAvatar() {
@@ -797,8 +826,18 @@ async function submitProfileAvatar() {
       profileAvatarError.value = res.message || "头像上传失败";
       return;
     }
+    const uploadedAvatar = res.data?.avatarUrl || "";
+    if (uploadedAvatar) {
+      adminProfile.value = {
+        ...adminProfile.value,
+        avatar: withAvatarCacheBust(uploadedAvatar)
+      };
+      setUserInfo(adminProfile.value);
+    }
     resetProfileAvatarInput();
-    await loadMyProfile({ silent: true });
+    if (!uploadedAvatar) {
+      await loadMyProfile({ silent: true });
+    }
     notify("success", "头像已更新");
   } catch (error) {
     profileAvatarError.value = error.response?.data?.message || error.message || "头像上传失败";

@@ -1,6 +1,7 @@
 package blog.common.constant;
 
 /**
+ * @author admin
  * 用户常量
  */
 public final class UserConstants {

@@ -3,6 +3,8 @@ package blog.entity.vo;
 import lombok.Data;
 
 /**
+ * @author admin
+ *
  * 当前登录用户信息
  */
 @Data

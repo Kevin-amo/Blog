@@ -1,6 +1,7 @@
 package blog.common.exception;
 
 /**
+ * @author admin
  * 权限不足异常
  */
 public class ForbiddenException extends RuntimeException {

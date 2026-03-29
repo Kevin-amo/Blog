@@ -24,6 +24,7 @@ import org.springframework.web.bind.annotation.RestController;
 
 /**
  * @author admin
+ *
  * 管理员接口
  */
 @RestController

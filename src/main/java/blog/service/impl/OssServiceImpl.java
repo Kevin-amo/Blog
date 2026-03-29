@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * OSS 文件服务实现（头像上传/删除）。
+ * OSS 文件服务实现（头像上传/删除）
  */
 @Slf4j
 @Service
@@ -57,7 +57,7 @@ public class OssServiceImpl implements OssService {
     private final AliOssConfig aliOssConfig;
 
     /**
-     * 上传头像并返回对象Key与完整URL。
+     * 上传头像并返回对象Key与完整URL
      */
     @Override
     public UploadResult uploadAvatar(MultipartFile file, Long userId) {
@@ -73,7 +73,7 @@ public class OssServiceImpl implements OssService {
     }
 
     /**
-     * 根据对象Key删除文件。
+     * 根据对象Key删除文件
      */
     @Override
     public void deleteObject(String objectKey) {
@@ -90,7 +90,7 @@ public class OssServiceImpl implements OssService {
     }
 
     /**
-     * 根据URL删除文件（仅处理本项目管理的域名）。
+     * 根据URL删除文件（仅处理本项目管理的域名）
      */
     @Override
     public void deleteByUrl(String fileUrl) {
@@ -107,7 +107,7 @@ public class OssServiceImpl implements OssService {
     }
 
     /**
-     * 校验头像文件基础规则：非空、大小、扩展名、MIME。
+     * 校验头像文件基础规则：非空、大小、扩展名、MIME
      */
     private void validateFile(MultipartFile file) {
         if (file == null || file.isEmpty()) {
@@ -129,7 +129,7 @@ public class OssServiceImpl implements OssService {
     }
 
     /**
-     * 解析文件扩展名并统一转小写。
+     * 解析文件扩展名并统一转小写
      */
     private String getFileExtension(String fileName) {
         String extension = StringUtils.getFilenameExtension(fileName);
@@ -140,7 +140,7 @@ public class OssServiceImpl implements OssService {
     }
 
     /**
-     * 标准化 MIME 类型（去掉参数并转小写）。
+     * 标准化 MIME 类型（去掉参数并转小写）
      */
     private String normalizeContentType(String contentType) {
         if (!StringUtils.hasText(contentType)) {
@@ -156,7 +156,7 @@ public class OssServiceImpl implements OssService {
     }
 
     /**
-     * 校验扩展名与 MIME 是否匹配，避免伪造文件类型。
+     * 校验扩展名与 MIME 是否匹配，避免伪造文件类型
      */
     private void validateMimeMatchesExtension(String extension, String contentType) {
         if ("jpg".equals(extension) || "jpeg".equals(extension)) {
@@ -183,7 +183,7 @@ public class OssServiceImpl implements OssService {
     }
 
     /**
-     * 执行 OSS 上传。
+     * 执行 OSS 上传
      */
     private void putObject(String objectKey, MultipartFile file, String contentType) {
         OSS ossClient = createClient();
@@ -199,7 +199,7 @@ public class OssServiceImpl implements OssService {
     }
 
     /**
-     * 创建 OSS 客户端并校验必要配置。
+     * 创建 OSS 客户端并校验必要配置
      */
     private OSS createClient() {
         String endpoint = aliOssConfig.getEndpoint();
@@ -214,7 +214,7 @@ public class OssServiceImpl implements OssService {
     }
 
     /**
-     * 生成可访问 URL；domain 不带协议时自动补 https://。
+     * 生成可访问 URL；domain 不带协议时自动补 https://
      */
     private String buildFileUrl(String objectKey) {
         String domain = aliOssConfig.getDomain();
@@ -234,7 +234,7 @@ public class OssServiceImpl implements OssService {
     }
 
     /**
-     * 从 URL 中提取对象Key，仅在域名属于本项目管理范围时才返回。
+     * 从 URL 中提取对象Key，仅在域名属于本项目管理范围时才返回
      */
     private String extractManagedObjectKey(String fileUrl) {
         URI uri;
@@ -264,7 +264,7 @@ public class OssServiceImpl implements OssService {
     }
 
     /**
-     * 构建“允许删除”的域名集合（自定义域名、endpoint域名、bucket域名）。
+     * 构建“允许删除”的域名集合（自定义域名、endpoint域名、bucket域名）
      */
     private Set<String> buildManagedHosts() {
         Set<String> hosts = new HashSet<>();
@@ -284,7 +284,7 @@ public class OssServiceImpl implements OssService {
     }
 
     /**
-     * 提取配置值中的主机名。
+     * 提取配置值中的主机名
      */
     private String extractHost(String value) {
         if (!StringUtils.hasText(value)) {
@@ -314,7 +314,7 @@ public class OssServiceImpl implements OssService {
     }
 
     /**
-     * 若未配置协议，默认补 https://。
+     * 若未配置协议，默认补 https://
      */
     private String ensureScheme(String value) {
         if (value.startsWith("http://") || value.startsWith("https://")) {

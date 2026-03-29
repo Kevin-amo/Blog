@@ -4,6 +4,8 @@ import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
+ * @author admin
+ *
  * 更新文章 DTO
  */
 @Data

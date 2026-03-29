@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 /**
+ * @author admin
+ *
  * 当前登录用户
  */
 @Data
