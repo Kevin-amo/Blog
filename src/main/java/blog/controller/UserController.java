@@ -67,14 +67,14 @@ public class UserController {
 
     @PutMapping("/profile")
     public Result<Void> updateProfile(@Valid @RequestBody UserProfileUpdateDTO dto) {
-        PermissionUtil.requireUser();
+        PermissionUtil.requireLogin();
         userService.updateProfile(dto);
         return Result.success();
     }
 
     @PutMapping("/password")
     public Result<Void> updatePassword(@Valid @RequestBody UserPasswordUpdateDTO dto) {
-        PermissionUtil.requireUser();
+        PermissionUtil.requireLogin();
         userService.updatePassword(dto);
         return Result.success();
     }

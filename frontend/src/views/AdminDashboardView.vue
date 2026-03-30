@@ -96,7 +96,7 @@
                 <td>{{ item.id }}</td>
                 <td>{{ item.username }}</td>
                 <td>{{ item.nickname || "-" }}</td>
-                <td>{{ item.status === 1 ? "启用" : "禁用" }}</td>
+                <td><span v-html="getUserStatusLabel(item.status)"></span></td>
                 <td>{{ formatDate(item.createTime) }}</td>
                 <td>
                   <div class="row-actions">
@@ -191,7 +191,7 @@
                 </td>
                 <td>{{ item.authorNickname || item.authorUsername || "-" }}</td>
                 <td>{{ item.status === 1 ? "已提交发布" : "草稿" }}</td>
-                <td>{{ getAuditLabel(item.auditStatus) }}</td>
+                <td><span v-html="getAuditLabel(item.auditStatus)"></span></td>
                 <td>{{ formatDate(item.createTime) }}</td>
                 <td>
                   <div class="row-actions">
@@ -280,7 +280,7 @@
               <tr v-for="category in categoryRows" :key="category.id">
                 <td>{{ category.name }}</td>
                 <td>{{ category.sort }}</td>
-                <td>{{ category.status === 1 ? "启用" : "禁用" }}</td>
+                <td><span v-html="getCategoryStatusLabel(category.status)"></span></td>
                 <td>{{ formatDate(category.createTime) }}</td>
                 <td>
                   <div class="row-actions">
@@ -322,9 +322,6 @@
         <section class="modal-card confirm-modal-card">
           <header class="modal-head">
             <h3>{{ confirmDialog.title }}</h3>
-            <button class="ghost-btn" type="button" @click="resolveConfirm(false)">
-              {{ confirmDialog.cancelText }}
-            </button>
           </header>
           <p class="confirm-message">{{ confirmDialog.message }}</p>
           <div class="editor-actions confirm-actions">
@@ -377,7 +374,6 @@
         <section class="modal-card category-editor-modal">
           <header class="modal-head">
             <h3>{{ editingCategoryId ? "编辑分类" : "新增分类" }}</h3>
-            <button class="ghost-btn" type="button" @click="closeCategoryEditor">关闭</button>
           </header>
 
           <form class="article-filter category-editor-form" @submit.prevent="submitCategory">
@@ -406,7 +402,7 @@
             <div class="article-filter-actions">
               <button class="ghost-btn" type="button" @click="closeCategoryEditor">取消</button>
               <button class="submit-btn" type="submit" :disabled="savingCategory">
-                {{ savingCategory ? "提交中..." : "确认保存" }}
+                {{ savingCategory ? "提交中..." : "确认" }}
               </button>
             </div>
           </form>
@@ -643,13 +639,26 @@ const reviewDetailHtml = computed(() => {
 });
 
 function getAuditLabel(auditStatus) {
-  if (Number(auditStatus) === 1) {
-    return "审核通过";
+  const status = Number(auditStatus);
+  if (status === 1) {
+    return '<span class="audit-badge audit-pass"><span class="audit-dot"></span>审核通过</span>';
   }
-  if (Number(auditStatus) === 2) {
-    return "审核驳回";
+  if (status === 2) {
+    return '<span class="audit-badge audit-reject"><span class="audit-dot"></span>审核驳回</span>';
   }
-  return "待审核";
+  return '<span class="audit-badge audit-pending"><span class="audit-dot"></span>待审核</span>';
+}
+
+function getUserStatusLabel(status) {
+  return status === 1
+      ? '<span class="audit-badge status-enabled"><span class="audit-dot"></span>启用</span>'
+      : '<span class="audit-badge status-disabled"><span class="audit-dot"></span>禁用</span>';
+}
+
+function getCategoryStatusLabel(status) {
+  return status === 1
+      ? '<span class="audit-badge status-enabled"><span class="audit-dot"></span>启用</span>'
+      : '<span class="audit-badge status-disabled"><span class="audit-dot"></span>禁用</span>';
 }
 
 function formatDate(raw) {
@@ -1279,7 +1288,6 @@ async function handleDeleteCategory(category) {
   return handleDeleteCategoryAction(category);
 }
 
-// Override browser-native popups with custom modal + notice UI
 async function handleToggleUserStatus(item) {
   const nextStatus = item.status === 1 ? 0 : 1;
   const confirmed = await askConfirm({

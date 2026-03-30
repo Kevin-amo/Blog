@@ -101,7 +101,7 @@
               </td>
               <td>{{ article.categoryName || categoryNameMap[article.categoryId] || "-" }}</td>
               <td>{{ article.status === 1 ? "已提交发布" : "草稿" }}</td>
-              <td>{{ getAuditLabel(article.auditStatus) }}</td>
+              <td><span v-html="getAuditLabel(article.auditStatus)"></span></td>
               <td>{{ article.isTop === 1 ? "是" : "否" }}</td>
               <td>{{ formatDate(article.createTime) }}</td>
               <td>
@@ -231,7 +231,7 @@ import { getMyProfileApi, logoutApi, uploadAvatarApi } from "../api/auth";
 import { deleteArticleApi, pageArticleApi } from "../api/article";
 import { optionsCategoryApi } from "../api/category";
 import { updateMyPasswordApi, updateMyProfileApi } from "../api/user";
-import { clearAuth, getUserInfo, setUserInfo } from "../utils/auth";
+import {clearAuth, clearToken, getUserInfo, setUserInfo} from "../utils/auth";
 
 const router = useRouter();
 
@@ -307,13 +307,14 @@ const avatarPreviewSrc = computed(() => selectedAvatarPreviewUrl.value || user.v
 const articleTotalPages = computed(() => Math.max(1, Math.ceil(articlePager.total / articlePager.pageSize) || 1));
 
 function getAuditLabel(auditStatus) {
-  if (Number(auditStatus) === 1) {
-    return "审核通过";
+  const status = Number(auditStatus);
+  if (status === 1) {
+    return '<span class="audit-badge audit-pass"><span class="audit-dot"></span>审核通过</span>';
   }
-  if (Number(auditStatus) === 2) {
-    return "审核驳回";
+  if (status === 2) {
+    return '<span class="audit-badge audit-reject"><span class="audit-dot"></span>审核驳回</span>';
   }
-  return "待审核";
+  return '<span class="audit-badge audit-pending"><span class="audit-dot"></span>待审核</span>';
 }
 
 function formatDate(raw) {
@@ -522,10 +523,14 @@ async function submitPassword() {
       passwordError.value = res.message || "修改密码失败";
       return;
     }
-    passwordSuccess.value = "密码已更新";
+    passwordSuccess.value = "密码已更新，正在返回登录页...";
     passwordForm.oldPassword = "";
     passwordForm.newPassword = "";
     passwordForm.confirmPassword = "";
+    setTimeout(() => {
+      window.location.href = '/login'
+      clearToken()
+    }, 1000);
   } catch (error) {
     passwordError.value = error.response?.data?.message || error.message || "修改密码失败";
   } finally {

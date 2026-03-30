@@ -104,7 +104,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updateProfile(UserProfileUpdateDTO dto) {
-        PermissionUtil.requireUser();
+        PermissionUtil.requireLogin();
         LoginUser loginUser = UserContext.getUser();
         int rows = userMapper.updateNicknameById(loginUser.getUserId(), dto.getNickname().trim());
         if (rows == 0) {
@@ -114,7 +114,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public void updatePassword(UserPasswordUpdateDTO dto) {
-        PermissionUtil.requireUser();
+        PermissionUtil.requireLogin();
         if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
             throw new RuntimeException("两次输入的新密码不一致");
         }

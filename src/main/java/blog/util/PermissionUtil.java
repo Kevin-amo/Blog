@@ -5,6 +5,8 @@ import blog.common.exception.ForbiddenException;
 import blog.model.LoginUser;
 
 /**
+ * @author admin
+ *
  * 权限工具
  */
 public final class PermissionUtil {
