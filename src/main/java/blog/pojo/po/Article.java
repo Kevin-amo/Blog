@@ -1,4 +1,4 @@
-package blog.entity.vo;
+package blog.pojo.po;
 
 import lombok.Data;
 
@@ -7,10 +7,10 @@ import java.time.LocalDateTime;
 /**
  * @author admin
  *
- * 文章视图对象
+ * 文章实体
  */
 @Data
-public class ArticleVO {
+public class Article {
 
     private Long id;
 
@@ -24,6 +24,9 @@ public class ArticleVO {
 
     private Long categoryId;
 
+    /**
+     * 0 草稿，1 已提交发布
+     */
     private Integer status;
 
     /**
@@ -44,4 +47,6 @@ public class ArticleVO {
     private Long updateBy;
 
     private LocalDateTime updateTime;
+
+    private Integer isDeleted;
 }

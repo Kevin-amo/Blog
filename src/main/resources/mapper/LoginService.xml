@@ -9,14 +9,14 @@
         view_count, comment_count, create_by, create_time, update_by, update_time, is_deleted
     </sql>
 
-    <insert id="insert" parameterType="blog.entity.po.Article" useGeneratedKeys="true" keyProperty="id">
+    <insert id="insert" parameterType="blog.pojo.po.Article" useGeneratedKeys="true" keyProperty="id">
         insert into article (title, summary, content, cover_url, category_id, status, audit_status, is_top,
                              view_count, comment_count, create_by, create_time, update_by, update_time, is_deleted)
         values (#{title}, #{summary}, #{content}, #{coverUrl}, #{categoryId}, #{status}, #{auditStatus}, #{isTop},
                 #{viewCount}, #{commentCount}, #{createBy}, #{createTime}, #{updateBy}, #{updateTime}, #{isDeleted})
     </insert>
 
-    <select id="selectList" resultType="blog.entity.po.Article">
+    <select id="selectList" resultType="blog.pojo.po.Article">
         select
         <include refid="base_column_list"/>
         from article
@@ -39,7 +39,7 @@
         order by is_top desc, create_time desc
     </select>
 
-    <select id="selectPublishedList" resultType="blog.entity.po.Article">
+    <select id="selectPublishedList" resultType="blog.pojo.po.Article">
         select
         <include refid="base_column_list"/>
         from article
@@ -57,7 +57,7 @@
         order by is_top desc, create_time desc
     </select>
 
-    <select id="selectByIdAndCreateBy" resultType="blog.entity.po.Article">
+    <select id="selectByIdAndCreateBy" resultType="blog.pojo.po.Article">
         select
         <include refid="base_column_list"/>
         from article
@@ -66,7 +66,7 @@
           and is_deleted = 0
     </select>
 
-    <select id="selectPublishedById" resultType="blog.entity.po.Article">
+    <select id="selectPublishedById" resultType="blog.pojo.po.Article">
         select
         <include refid="base_column_list"/>
         from article
@@ -76,7 +76,7 @@
           and audit_status = 1
     </select>
 
-    <select id="selectById" resultType="blog.entity.po.Article">
+    <select id="selectById" resultType="blog.pojo.po.Article">
         select
         <include refid="base_column_list"/>
         from article
@@ -120,7 +120,7 @@
           and is_deleted = 0
     </select>
 
-    <select id="selectPage" resultType="blog.entity.vo.ArticlePageVO">
+    <select id="selectPage" resultType="blog.pojo.vo.ArticlePageVO">
         select a.id,
                a.title,
                a.category_id,
@@ -150,7 +150,7 @@
         order by a.id desc
     </select>
 
-    <select id="selectReviewPage" resultType="blog.entity.vo.ArticleReviewPageVO">
+    <select id="selectReviewPage" resultType="blog.pojo.vo.ArticleReviewPageVO">
         select a.id,
                a.title,
                a.summary,

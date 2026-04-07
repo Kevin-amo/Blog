@@ -1,15 +1,15 @@
 package blog.service.impl;
 
 import blog.common.Result.PageResult;
-import blog.entity.dto.ArticleAddDTO;
-import blog.entity.dto.ArticlePageQueryDTO;
-import blog.entity.dto.ArticleQueryDTO;
-import blog.entity.dto.ArticleReviewPageQueryDTO;
-import blog.entity.dto.ArticleUpdateDTO;
-import blog.entity.po.Article;
-import blog.entity.vo.ArticlePageVO;
-import blog.entity.vo.ArticleReviewPageVO;
-import blog.entity.vo.ArticleVO;
+import blog.pojo.dto.ArticleAddDTO;
+import blog.pojo.dto.ArticlePageQueryDTO;
+import blog.pojo.dto.ArticleQueryDTO;
+import blog.pojo.dto.ArticleReviewPageQueryDTO;
+import blog.pojo.dto.ArticleUpdateDTO;
+import blog.pojo.po.Article;
+import blog.pojo.vo.ArticlePageVO;
+import blog.pojo.vo.ArticleReviewPageVO;
+import blog.pojo.vo.ArticleVO;
 import blog.mapper.ArticleMapper;
 import blog.service.ArticleService;
 import blog.util.PermissionUtil;

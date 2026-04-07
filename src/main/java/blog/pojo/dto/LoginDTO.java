@@ -1,4 +1,4 @@
-package blog.entity.dto;
+package blog.pojo.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;

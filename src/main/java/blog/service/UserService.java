@@ -1,12 +1,12 @@
 package blog.service;
 
 import blog.common.Result.PageResult;
-import blog.entity.dto.UserAdminPageQueryDTO;
-import blog.entity.dto.UserPasswordUpdateDTO;
-import blog.entity.dto.UserProfileUpdateDTO;
-import blog.entity.dto.UserRegisterDTO;
-import blog.entity.vo.UserAdminPageVO;
-import blog.entity.vo.UserProfileVO;
+import blog.pojo.dto.UserAdminPageQueryDTO;
+import blog.pojo.dto.UserPasswordUpdateDTO;
+import blog.pojo.dto.UserProfileUpdateDTO;
+import blog.pojo.dto.UserRegisterDTO;
+import blog.pojo.vo.UserAdminPageVO;
+import blog.pojo.vo.UserProfileVO;
 import org.springframework.web.multipart.MultipartFile;
 
 /**

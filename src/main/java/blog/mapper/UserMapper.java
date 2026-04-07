@@ -1,8 +1,8 @@
 package blog.mapper;
 
-import blog.entity.dto.UserAdminPageQueryDTO;
-import blog.entity.po.User;
-import blog.entity.vo.UserAdminPageVO;
+import blog.pojo.dto.UserAdminPageQueryDTO;
+import blog.pojo.po.User;
+import blog.pojo.vo.UserAdminPageVO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;

@@ -1,18 +1,16 @@
-package blog.entity.dto;
+package blog.pojo.dto;
 
 import lombok.Data;
 
 /**
  * @author admin
  *
- * 文章分页查询 DTO
+ * 文章列表查询 DTO
  */
 @Data
-public class ArticlePageQueryDTO {
+public class ArticleQueryDTO {
 
     private String title;
-
-    private Long categoryId;
 
     /**
      * 0 草稿，1 提交发布
@@ -24,7 +22,5 @@ public class ArticlePageQueryDTO {
      */
     private Integer auditStatus;
 
-    private Integer pageNum = 1;
-
-    private Integer pageSize = 10;
+    private Long categoryId;
 }

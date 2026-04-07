@@ -1,9 +1,9 @@
 package blog.mapper;
 
-import blog.entity.po.Category;
-import blog.entity.dto.CategoryPageQueryDTO;
-import blog.entity.vo.CategoryOptionVO;
-import blog.entity.vo.CategoryVO;
+import blog.pojo.po.Category;
+import blog.pojo.dto.CategoryPageQueryDTO;
+import blog.pojo.vo.CategoryOptionVO;
+import blog.pojo.vo.CategoryVO;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

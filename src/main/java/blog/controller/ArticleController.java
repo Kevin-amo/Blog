@@ -2,12 +2,12 @@ package blog.controller;
 
 import blog.common.Result.PageResult;
 import blog.common.Result.Result;
-import blog.entity.dto.ArticleAddDTO;
-import blog.entity.dto.ArticlePageQueryDTO;
-import blog.entity.dto.ArticleQueryDTO;
-import blog.entity.dto.ArticleUpdateDTO;
-import blog.entity.vo.ArticlePageVO;
-import blog.entity.vo.ArticleVO;
+import blog.pojo.dto.ArticleAddDTO;
+import blog.pojo.dto.ArticlePageQueryDTO;
+import blog.pojo.dto.ArticleQueryDTO;
+import blog.pojo.dto.ArticleUpdateDTO;
+import blog.pojo.vo.ArticlePageVO;
+import blog.pojo.vo.ArticleVO;
 import blog.service.ArticleService;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

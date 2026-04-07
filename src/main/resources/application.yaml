@@ -2,11 +2,18 @@ server:
   port: 8081
 
 spring:
+  config:
+    import: optional:file:./src/main/resources/application-private.yaml
   datasource:
     url: jdbc:mysql://localhost:3306/blog?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
-    password: root
     driver-class-name: com.mysql.cj.jdbc.Driver
+  servlet:
+    multipart:
+      # 单个文件最大5mb
+      max-file-size: 5MB
+      # 单次请求最大5mb
+      max-request-size: 5MB
 
 mybatis:
   mapper-locations: classpath:/mapper/*.xml
@@ -16,5 +23,10 @@ mybatis:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
 
 jwt:
-  secret: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9d2VzZG9tZQ
   expiration: 720000000  # 暂时设定200h
+
+aliyun:
+  oss:
+    endpoint: oss-cn-hangzhou.aliyuncs.com
+    bucket-name: lqr-blog
+    domain: lqr-blog.oss-cn-hangzhou.aliyuncs.com

@@ -1,11 +1,11 @@
 package blog.mapper;
 
-import blog.entity.dto.ArticlePageQueryDTO;
-import blog.entity.dto.ArticleQueryDTO;
-import blog.entity.dto.ArticleReviewPageQueryDTO;
-import blog.entity.po.Article;
-import blog.entity.vo.ArticlePageVO;
-import blog.entity.vo.ArticleReviewPageVO;
+import blog.pojo.dto.ArticlePageQueryDTO;
+import blog.pojo.dto.ArticleQueryDTO;
+import blog.pojo.dto.ArticleReviewPageQueryDTO;
+import blog.pojo.po.Article;
+import blog.pojo.vo.ArticlePageVO;
+import blog.pojo.vo.ArticleReviewPageVO;
 import org.apache.ibatis.annotations.Param;
 
 import java.util.List;

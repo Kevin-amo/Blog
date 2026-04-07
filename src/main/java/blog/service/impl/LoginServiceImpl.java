@@ -1,8 +1,8 @@
 package blog.service.impl;
 
 import blog.common.constant.UserConstants;
-import blog.entity.dto.LoginDTO;
-import blog.entity.po.User;
+import blog.pojo.dto.LoginDTO;
+import blog.pojo.po.User;
 import blog.mapper.UserMapper;
 import blog.service.LoginService;
 import blog.util.BCryptUtil;

@@ -1,11 +1,11 @@
 package blog.service;
 
 import blog.common.Result.PageResult;
-import blog.entity.dto.CategoryAddDTO;
-import blog.entity.dto.CategoryUpdateDTO;
-import blog.entity.vo.CategoryOptionVO;
-import blog.entity.vo.CategoryVO;
-import blog.entity.dto.CategoryPageQueryDTO;
+import blog.pojo.dto.CategoryAddDTO;
+import blog.pojo.dto.CategoryUpdateDTO;
+import blog.pojo.vo.CategoryOptionVO;
+import blog.pojo.vo.CategoryVO;
+import blog.pojo.dto.CategoryPageQueryDTO;
 
 import java.util.List;
 

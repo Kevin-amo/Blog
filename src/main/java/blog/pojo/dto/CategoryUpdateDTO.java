@@ -1,4 +1,4 @@
-package blog.entity.dto;
+package blog.pojo.dto;
 
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.NotNull;
@@ -6,16 +6,20 @@ import lombok.Data;
 
 /**
  * @author admin
- *
- * @author admin
  */
 @Data
-public class CategoryAddDTO {
+public class CategoryUpdateDTO {
+
+    /**
+     * 分类ID
+     */
+    @NotNull(message = "分类ID不能为空")
+    private Long id;
 
     /**
      * 分类名称
      */
-    @NotBlank
+    @NotBlank(message = "分类名称不能为空")
     private String name;
 
     /**
@@ -29,5 +33,6 @@ public class CategoryAddDTO {
      */
     @NotNull(message = "状态不能为空")
     private Integer status;
+
 
 }

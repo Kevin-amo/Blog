@@ -1,11 +1,11 @@
 package blog.controller;
 
 import blog.common.Result.Result;
-import blog.entity.dto.LoginDTO;
-import blog.entity.dto.UserPasswordUpdateDTO;
-import blog.entity.dto.UserProfileUpdateDTO;
-import blog.entity.dto.UserRegisterDTO;
-import blog.entity.vo.UserProfileVO;
+import blog.pojo.dto.LoginDTO;
+import blog.pojo.dto.UserPasswordUpdateDTO;
+import blog.pojo.dto.UserProfileUpdateDTO;
+import blog.pojo.dto.UserRegisterDTO;
+import blog.pojo.vo.UserProfileVO;
 import blog.service.LoginService;
 import blog.service.UserService;
 import blog.util.PermissionUtil;

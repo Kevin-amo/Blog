@@ -1,4 +1,4 @@
-package blog.entity.vo;
+package blog.pojo.vo;
 
 import lombok.Data;
 

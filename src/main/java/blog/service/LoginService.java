@@ -1,6 +1,6 @@
 package blog.service;
 
-import blog.entity.dto.LoginDTO;
+import blog.pojo.dto.LoginDTO;
 
 import java.util.Map;
 
