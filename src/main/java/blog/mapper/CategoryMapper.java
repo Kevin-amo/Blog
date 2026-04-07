@@ -43,14 +43,14 @@ public interface CategoryMapper {
      *
      * @param category 分类实体
      */
-    void updateById(Category category);
+    int updateById(Category category);
 
     /**
      * 逻辑删除分类
      *
      * @param id 分类ID
      */
-    void deleteById(Long id);
+    int deleteById(Long id);
 
     /**
      * 根据名称查询分类数量

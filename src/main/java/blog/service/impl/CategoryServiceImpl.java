@@ -15,6 +15,7 @@ import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
@@ -35,6 +36,7 @@ public class CategoryServiceImpl implements CategoryService {
      * @param dto 新增参数
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void add(CategoryAddDTO dto) {
         // 校验分类名称是否重复
         Integer count = categoryMapper.countByName(dto.getName());
@@ -88,6 +90,7 @@ public class CategoryServiceImpl implements CategoryService {
      * @param dto 修改参数
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(CategoryUpdateDTO dto) {
         // 校验分类是否存在
         CategoryVO oldVO = categoryMapper.selectById(dto.getId());
@@ -103,7 +106,10 @@ public class CategoryServiceImpl implements CategoryService {
         Category category = new Category();
         BeanUtils.copyProperties(dto, category);
         // 修改分类, 更新数据库
-        categoryMapper.updateById(category);
+        int rows = categoryMapper.updateById(category);
+        if (rows == 0) {
+            throw new RuntimeException("分类不存在或已被删除！");
+        }
     }
 
     /**
@@ -112,6 +118,7 @@ public class CategoryServiceImpl implements CategoryService {
      * @param id 分类ID
      */
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         // 校验分类是否存在
         CategoryVO oldVO = categoryMapper.selectById(id);
@@ -124,7 +131,10 @@ public class CategoryServiceImpl implements CategoryService {
             throw new RuntimeException("分类下还有一篇文章，不能删除！");
         }
         // 执行删除（逻辑）
-        categoryMapper.deleteById(id);
+        int rows = categoryMapper.deleteById(id);
+        if (rows == 0) {
+            throw new RuntimeException("分类不存在或已被删除！");
+        }
     }
 
     /**

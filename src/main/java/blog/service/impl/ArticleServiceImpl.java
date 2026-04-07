@@ -18,6 +18,7 @@ import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -42,6 +43,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Long add(ArticleAddDTO addDTO) {
         PermissionUtil.requireUser();
         Long currentUserId = UserContext.getUser().getUserId();
@@ -129,6 +131,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void update(ArticleUpdateDTO updateDTO) {
         PermissionUtil.requireUser();
         Long currentUserId = UserContext.getUser().getUserId();
@@ -151,6 +154,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
         PermissionUtil.requireUser();
         Long currentUserId = UserContext.getUser().getUserId();
@@ -180,6 +184,7 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void audit(Long id, Integer auditStatus) {
         PermissionUtil.requireAdmin();
         validateAuditStatus(auditStatus);

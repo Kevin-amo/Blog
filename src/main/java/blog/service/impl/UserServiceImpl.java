@@ -22,12 +22,14 @@ import com.github.pagehelper.PageInfo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.StringUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
 /**
+ * @author admin
  * 用户服务实现
  */
 @Slf4j
@@ -40,6 +42,7 @@ public class UserServiceImpl implements UserService {
     private final OssService ossService;
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void register(UserRegisterDTO registerDTO) {
         if (!registerDTO.getPassword().equals(registerDTO.getRePassword())) {
             throw new RuntimeException("两次输入的密码不一致");
@@ -70,6 +73,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public String uploadAvatar(MultipartFile file) {
         User currentUser = loadCurrentUser();
         String oldAvatar = currentUser.getAvatar();
@@ -103,6 +107,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateProfile(UserProfileUpdateDTO dto) {
         PermissionUtil.requireLogin();
         LoginUser loginUser = UserContext.getUser();
@@ -113,6 +118,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updatePassword(UserPasswordUpdateDTO dto) {
         PermissionUtil.requireLogin();
         if (!dto.getNewPassword().equals(dto.getConfirmPassword())) {
@@ -142,6 +148,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void updateUserStatus(Long userId, Integer status) {
         PermissionUtil.requireAdmin();
         if (!Integer.valueOf(UserConstants.STATUS_ENABLED).equals(status)
@@ -155,6 +162,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void resetUserPassword(Long userId) {
         PermissionUtil.requireAdmin();
         String encodedPassword = BCryptUtil.encode(UserConstants.DEFAULT_RESET_PASSWORD);
@@ -165,6 +173,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void deleteUser(Long userId) {
         PermissionUtil.requireAdmin();
         LoginUser admin = UserContext.getUser();
