@@ -32,5 +32,14 @@ aliyun:
     domain: lqr-blog.oss-cn-hangzhou.aliyuncs.com
 
 # knife4j
-knife4j:
-  enable: true
+springdoc:
+  api-docs:
+    enabled: true
+    path: /v3/api-docs
+  swagger-ui:
+    enabled: true
+    path: /swagger-ui.html
+  group-configs:
+    - group: default
+      paths-to-match: /**
+      packages-to-scan: blog.controller
