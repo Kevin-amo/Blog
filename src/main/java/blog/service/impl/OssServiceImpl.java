@@ -23,7 +23,7 @@ import java.util.Set;
 import java.util.UUID;
 
 /**
- * OSS 文件服务实现（头像上传/删除）
+ * 对象存储服务实现类，负责头像文件上传与删除。
  */
 @Slf4j
 @Service
@@ -323,3 +323,5 @@ public class OssServiceImpl implements OssService {
         return "https://" + value;
     }
 }
+
+

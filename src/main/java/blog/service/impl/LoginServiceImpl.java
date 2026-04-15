@@ -14,7 +14,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * 认证服务实现
+ * 登录认证服务实现类。
  */
 @Service
 @RequiredArgsConstructor
@@ -23,6 +23,12 @@ public class LoginServiceImpl implements LoginService {
     private final UserMapper userMapper;
     private final JwtUtil jwtUtil;
 
+    /**
+     * 校验账号密码并生成登录令牌。
+     *
+     * @param loginDTO 登录参数
+     * @return 登录结果
+     */
     @Override
     public Map<String, Object> login(LoginDTO loginDTO) {
         User user = userMapper.selectByUsername(loginDTO.getUsername());

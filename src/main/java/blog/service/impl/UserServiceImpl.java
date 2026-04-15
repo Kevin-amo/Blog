@@ -29,8 +29,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.util.List;
 
 /**
- * @author admin
- * 用户服务实现
+ * 用户服务实现类。
  */
 @Slf4j
 @Service
@@ -41,6 +40,11 @@ public class UserServiceImpl implements UserService {
     private final ArticleMapper articleMapper;
     private final OssService ossService;
 
+    /**
+     * 处理用户注册。
+     *
+     * @param registerDTO 注册参数
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void register(UserRegisterDTO registerDTO) {
@@ -60,6 +64,11 @@ public class UserServiceImpl implements UserService {
         userMapper.insert(user);
     }
 
+    /**
+     * 获取当前登录用户资料。
+     *
+     * @return 用户资料
+     */
     @Override
     public UserProfileVO me() {
         User user = loadCurrentUser();
@@ -72,6 +81,12 @@ public class UserServiceImpl implements UserService {
         return profileVO;
     }
 
+    /**
+     * 上传并更新当前用户头像。
+     *
+     * @param file 头像文件
+     * @return 新头像地址
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public String uploadAvatar(MultipartFile file) {
@@ -106,6 +121,11 @@ public class UserServiceImpl implements UserService {
         return uploadResult.fileUrl();
     }
 
+    /**
+     * 修改当前用户昵称资料。
+     *
+     * @param dto 修改参数
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateProfile(UserProfileUpdateDTO dto) {
@@ -117,6 +137,11 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    /**
+     * 修改当前用户登录密码。
+     *
+     * @param dto 密码修改参数
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updatePassword(UserPasswordUpdateDTO dto) {
@@ -138,6 +163,12 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    /**
+     * 后台分页查询用户列表。
+     *
+     * @param queryDTO 查询参数
+     * @return 分页结果
+     */
     @Override
     public PageResult<UserAdminPageVO> pageUsers(UserAdminPageQueryDTO queryDTO) {
         PermissionUtil.requireAdmin();
@@ -147,6 +178,12 @@ public class UserServiceImpl implements UserService {
         return new PageResult<>(pageInfo.getTotal(), pageInfo.getList());
     }
 
+    /**
+     * 后台修改用户状态。
+     *
+     * @param userId 用户ID
+     * @param status 用户状态
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void updateUserStatus(Long userId, Integer status) {
@@ -161,6 +198,11 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    /**
+     * 后台重置用户密码。
+     *
+     * @param userId 用户ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void resetUserPassword(Long userId) {
@@ -172,6 +214,11 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    /**
+     * 删除用户及其关联数据。
+     *
+     * @param userId 用户ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void deleteUser(Long userId) {
@@ -184,6 +231,11 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+    /**
+     * 加载当前登录用户实体。
+     *
+     * @return 当前用户实体
+     */
     private User loadCurrentUser() {
         LoginUser loginUser = UserContext.getUser();
         if (loginUser == null || loginUser.getUserId() == null) {

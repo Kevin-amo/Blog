@@ -1,6 +1,7 @@
 package blog.service.impl;
 
 import blog.common.Result.PageResult;
+import blog.mapper.ArticleMapper;
 import blog.pojo.dto.ArticleAddDTO;
 import blog.pojo.dto.ArticlePageQueryDTO;
 import blog.pojo.dto.ArticleQueryDTO;
@@ -10,12 +11,12 @@ import blog.pojo.po.Article;
 import blog.pojo.vo.ArticlePageVO;
 import blog.pojo.vo.ArticleReviewPageVO;
 import blog.pojo.vo.ArticleVO;
-import blog.mapper.ArticleMapper;
 import blog.service.ArticleService;
 import blog.util.PermissionUtil;
 import blog.util.UserContext;
 import com.github.pagehelper.PageHelper;
 import com.github.pagehelper.PageInfo;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,17 +32,20 @@ import static blog.common.constant.ArticleConstants.STATUS_DRAFT;
 import static blog.common.constant.ArticleConstants.STATUS_PUBLISHED;
 
 /**
- * 文章服务实现
+ * 文章服务实现类。
  */
 @Service
+@RequiredArgsConstructor
 public class ArticleServiceImpl implements ArticleService {
 
     private final ArticleMapper articleMapper;
 
-    public ArticleServiceImpl(ArticleMapper articleMapper) {
-        this.articleMapper = articleMapper;
-    }
-
+    /**
+     * 新增文章。
+     *
+     * @param addDTO 新增参数
+     * @return 文章ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Long add(ArticleAddDTO addDTO) {
@@ -57,7 +61,6 @@ public class ArticleServiceImpl implements ArticleService {
         article.setAuditStatus(AUDIT_PENDING);
         article.setIsTop(article.getIsTop() == null ? 0 : article.getIsTop());
         article.setViewCount(0);
-        article.setCommentCount(0);
         article.setCreateBy(currentUserId);
         article.setUpdateBy(currentUserId);
         article.setIsDeleted(0);
@@ -68,6 +71,12 @@ public class ArticleServiceImpl implements ArticleService {
         return article.getId();
     }
 
+    /**
+     * 查询当前用户文章列表。
+     *
+     * @param queryDTO 查询参数
+     * @return 文章列表
+     */
     @Override
     public List<ArticleVO> list(ArticleQueryDTO queryDTO) {
         PermissionUtil.requireUser();
@@ -82,6 +91,12 @@ public class ArticleServiceImpl implements ArticleService {
         return voList;
     }
 
+    /**
+     * 查询公开已发布文章列表。
+     *
+     * @param queryDTO 查询参数
+     * @return 文章列表
+     */
     @Override
     public List<ArticleVO> listPublished(ArticleQueryDTO queryDTO) {
         List<Article> articleList = articleMapper.selectPublishedList(queryDTO);
@@ -94,6 +109,12 @@ public class ArticleServiceImpl implements ArticleService {
         return voList;
     }
 
+    /**
+     * 查询当前用户文章详情。
+     *
+     * @param id 文章ID
+     * @return 文章详情
+     */
     @Override
     public ArticleVO detail(Long id) {
         PermissionUtil.requireUser();
@@ -107,6 +128,12 @@ public class ArticleServiceImpl implements ArticleService {
         return vo;
     }
 
+    /**
+     * 查询已发布文章详情。
+     *
+     * @param id 文章ID
+     * @return 文章详情
+     */
     @Override
     public ArticleVO detailPublished(Long id) {
         Article article = articleMapper.selectPublishedById(id);
@@ -118,6 +145,12 @@ public class ArticleServiceImpl implements ArticleService {
         return vo;
     }
 
+    /**
+     * 后台查询文章详情。
+     *
+     * @param id 文章ID
+     * @return 文章详情
+     */
     @Override
     public ArticleVO detailForAdmin(Long id) {
         PermissionUtil.requireAdmin();
@@ -130,6 +163,11 @@ public class ArticleServiceImpl implements ArticleService {
         return vo;
     }
 
+    /**
+     * 修改文章。
+     *
+     * @param updateDTO 修改参数
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void update(ArticleUpdateDTO updateDTO) {
@@ -153,6 +191,11 @@ public class ArticleServiceImpl implements ArticleService {
         }
     }
 
+    /**
+     * 删除文章。
+     *
+     * @param id 文章ID
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void delete(Long id) {
@@ -164,6 +207,12 @@ public class ArticleServiceImpl implements ArticleService {
         }
     }
 
+    /**
+     * 分页查询当前用户文章。
+     *
+     * @param queryDTO 查询参数
+     * @return 分页结果
+     */
     @Override
     public PageResult<ArticlePageVO> page(ArticlePageQueryDTO queryDTO) {
         PermissionUtil.requireUser();
@@ -174,6 +223,12 @@ public class ArticleServiceImpl implements ArticleService {
         return new PageResult<>(pageInfo.getTotal(), pageInfo.getList());
     }
 
+    /**
+     * 后台分页查询文章审核列表。
+     *
+     * @param queryDTO 查询参数
+     * @return 分页结果
+     */
     @Override
     public PageResult<ArticleReviewPageVO> reviewPage(ArticleReviewPageQueryDTO queryDTO) {
         PermissionUtil.requireAdmin();
@@ -183,6 +238,12 @@ public class ArticleServiceImpl implements ArticleService {
         return new PageResult<>(pageInfo.getTotal(), pageInfo.getList());
     }
 
+    /**
+     * 审核文章状态。
+     *
+     * @param id 文章ID
+     * @param auditStatus 审核状态
+     */
     @Override
     @Transactional(rollbackFor = Exception.class)
     public void audit(Long id, Integer auditStatus) {
@@ -195,6 +256,11 @@ public class ArticleServiceImpl implements ArticleService {
         }
     }
 
+    /**
+     * 校验文章状态是否合法。
+     *
+     * @param status 文章状态
+     */
     private void validateStatus(Integer status) {
         if (status == null) {
             throw new RuntimeException("文章状态不能为空");
@@ -204,6 +270,11 @@ public class ArticleServiceImpl implements ArticleService {
         }
     }
 
+    /**
+     * 校验审核状态是否合法。
+     *
+     * @param auditStatus 审核状态
+     */
     private void validateAuditStatus(Integer auditStatus) {
         if (auditStatus == null) {
             throw new RuntimeException("审核状态不能为空");
@@ -213,6 +284,13 @@ public class ArticleServiceImpl implements ArticleService {
         }
     }
 
+    /**
+     * 校验文章发布时的必填字段。
+     *
+     * @param title 标题
+     * @param content 内容
+     * @param categoryId 分类ID
+     */
     private void validatePublishFields(String title, String content, Long categoryId) {
         if (title == null || title.trim().isEmpty()) {
             throw new RuntimeException("请输入文章标题");

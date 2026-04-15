@@ -9,6 +9,8 @@ import blog.pojo.vo.CategoryOptionVO;
 import blog.pojo.vo.CategoryVO;
 import blog.service.CategoryService;
 import blog.util.PermissionUtil;
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -30,11 +32,13 @@ import java.util.List;
 @RestController
 @RequestMapping("/category")
 @RequiredArgsConstructor
+@Tag(name = "分类接口")
 public class CategoryController {
 
     private final CategoryService categoryService;
 
     @PostMapping
+    @Operation(summary = "新增分类")
     public Result<Void> add(@RequestBody @Valid CategoryAddDTO addDTO) {
         PermissionUtil.requireAdmin();
         categoryService.add(addDTO);
@@ -42,18 +46,21 @@ public class CategoryController {
     }
 
     @GetMapping
+    @Operation(summary = "分页查询分类")
     public Result<PageResult<CategoryVO>> page(CategoryPageQueryDTO queryDTO) {
         PermissionUtil.requireAdmin();
         return Result.success(categoryService.page(queryDTO));
     }
 
     @GetMapping("/{id}")
+    @Operation(summary = "查询分类详情")
     public Result<CategoryVO> detail(@PathVariable Long id) {
         PermissionUtil.requireAdmin();
         return Result.success(categoryService.detail(id));
     }
 
     @PutMapping
+    @Operation(summary = "更新分类")
     public Result<Void> update(@RequestBody @Valid CategoryUpdateDTO updateDTO) {
         PermissionUtil.requireAdmin();
         categoryService.update(updateDTO);
@@ -61,6 +68,7 @@ public class CategoryController {
     }
 
     @DeleteMapping("/{id}")
+    @Operation(summary = "删除分类")
     public Result<Void> delete(@PathVariable Long id) {
         PermissionUtil.requireAdmin();
         categoryService.delete(id);
@@ -68,6 +76,7 @@ public class CategoryController {
     }
 
     @GetMapping("/options")
+    @Operation(summary = "获取分类选项列表")
     public Result<List<CategoryOptionVO>> options() {
         return Result.success(categoryService.options());
     }

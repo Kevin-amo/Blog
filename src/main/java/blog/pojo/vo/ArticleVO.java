@@ -35,8 +35,6 @@ public class ArticleVO {
 
     private Integer viewCount;
 
-    private Integer commentCount;
-
     private Long createBy;
 
     private LocalDateTime createTime;

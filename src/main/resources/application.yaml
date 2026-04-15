@@ -30,3 +30,7 @@ aliyun:
     endpoint: oss-cn-hangzhou.aliyuncs.com
     bucket-name: lqr-blog
     domain: lqr-blog.oss-cn-hangzhou.aliyuncs.com
+
+# knife4j
+knife4j:
+  enable: true

@@ -10,7 +10,7 @@ import blog.pojo.dto.CategoryPageQueryDTO;
 import java.util.List;
 
 /**
- * @author admin
+ * 分类服务接口。
  */
 public interface CategoryService {
 

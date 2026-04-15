@@ -20,7 +20,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- * @author admin
+ * 分类服务实现类。
  */
 @Service
 @RequiredArgsConstructor
@@ -31,7 +31,7 @@ public class CategoryServiceImpl implements CategoryService {
     private final ArticleMapper articleMapper;
 
     /**
-     * 新增分类
+     * 新增分类。
      *
      * @param dto 新增参数
      */
@@ -52,7 +52,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     /**
-     * 分类分页列表
+     * 分页查询分类列表。
      *
      * @param queryDTO 查询参数
      * @return 分页结果
@@ -70,7 +70,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     /**
-     * 查询详情
+     * 查询分类详情。
      *
      * @param id 分类ID
      * @return 分类详情
@@ -85,7 +85,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     /**
-     * 修改分类
+     * 修改分类信息。
      *
      * @param dto 修改参数
      */
@@ -113,7 +113,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     /**
-     * 删除分类
+     * 删除分类。
      *
      * @param id 分类ID
      */
@@ -138,7 +138,7 @@ public class CategoryServiceImpl implements CategoryService {
     }
 
     /**
-     * 查询分类下拉选项
+     * 查询分类下拉选项。
      *
      * @return 下拉列表
      */

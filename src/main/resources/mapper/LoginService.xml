@@ -6,14 +6,14 @@
 
     <sql id="base_column_list">
         id, title, summary, content, cover_url, category_id, status, audit_status, is_top,
-        view_count, comment_count, create_by, create_time, update_by, update_time, is_deleted
+        view_count, create_by, create_time, update_by, update_time, is_deleted
     </sql>
 
     <insert id="insert" parameterType="blog.pojo.po.Article" useGeneratedKeys="true" keyProperty="id">
         insert into article (title, summary, content, cover_url, category_id, status, audit_status, is_top,
-                             view_count, comment_count, create_by, create_time, update_by, update_time, is_deleted)
+                             view_count, create_by, create_time, update_by, update_time, is_deleted)
         values (#{title}, #{summary}, #{content}, #{coverUrl}, #{categoryId}, #{status}, #{auditStatus}, #{isTop},
-                #{viewCount}, #{commentCount}, #{createBy}, #{createTime}, #{updateBy}, #{updateTime}, #{isDeleted})
+                #{viewCount}, #{createBy}, #{createTime}, #{updateBy}, #{updateTime}, #{isDeleted})
     </insert>
 
     <select id="selectList" resultType="blog.pojo.po.Article">
@@ -195,4 +195,10 @@
           and is_deleted = 0
     </update>
 
+    <select id="selectIdsByCreateBy" resultType="java.lang.Long">
+        select id
+        from article
+        where create_by = #{createBy}
+          and is_deleted = 0
+    </select>
 </mapper>

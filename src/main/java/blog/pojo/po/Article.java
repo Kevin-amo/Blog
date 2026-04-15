@@ -38,8 +38,6 @@ public class Article {
 
     private Integer viewCount;
 
-    private Integer commentCount;
-
     private Long createBy;
 
     private LocalDateTime createTime;

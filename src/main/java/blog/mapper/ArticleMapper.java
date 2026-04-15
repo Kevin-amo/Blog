@@ -41,4 +41,6 @@ public interface ArticleMapper {
     int updateAuditStatusById(@Param("id") Long id, @Param("auditStatus") Integer auditStatus, @Param("updateBy") Long updateBy);
 
     int deleteByCreateBy(@Param("createBy") Long createBy, @Param("updateBy") Long updateBy);
+
+    List<Long> selectIdsByCreateBy(@Param("createBy") Long createBy);
 }

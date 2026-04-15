@@ -3,7 +3,7 @@ package blog.service;
 import org.springframework.web.multipart.MultipartFile;
 
 /**
- * @author admin
+ * 对象存储服务接口。
  */
 public interface OssService {
 

@@ -4,6 +4,7 @@ import blog.intercept.LoginInterceptor;
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
+import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 /**
@@ -22,9 +23,22 @@ public class WebMvcConfig implements WebMvcConfigurer {
                 .excludePathPatterns("/user/login")
                 .excludePathPatterns("/user/register")
                 .excludePathPatterns("/article/public/**")
+                .excludePathPatterns("/doc.html")
+                .excludePathPatterns("/doc.html/**")
                 .excludePathPatterns(
+                        "/v3/api-docs/**",
+                        "/swagger-resources/**",
+                        "/webjars/**",
                         "/error",
                         "/favicon.ico"
                 );
+    }
+
+    @Override
+    public void addResourceHandlers(ResourceHandlerRegistry registry) {
+        registry.addResourceHandler("doc.html")
+                .addResourceLocations("classpath:/META-INF/resources/");
+        registry.addResourceHandler("/webjars/**")
+                .addResourceLocations("classpath:/META-INF/resources/webjars/");
     }
 }
