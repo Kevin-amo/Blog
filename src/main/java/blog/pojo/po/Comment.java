@@ -21,5 +21,7 @@ public class Comment {
 
     private Integer isDeleted;
 
+    private Long createBy;
+
     private LocalDateTime createTime;
 }

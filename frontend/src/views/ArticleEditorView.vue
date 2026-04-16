@@ -21,7 +21,17 @@
         </label>
 
         <label>
-          摘要
+          <span class="field-label-with-action">
+            <span>摘要</span>
+            <button
+              class="ghost-btn"
+              type="button"
+              :disabled="summaryGenerating || !canGenerateSummary"
+              @click="generateSummary"
+            >
+              {{ summaryGenerating ? "生成中..." : "AI 生成摘要" }}
+            </button>
+          </span>
           <textarea
             v-model.trim="form.summary"
             rows="2"
@@ -99,7 +109,12 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import { addArticleApi, detailArticleApi, updateArticleApi } from "../api/article";
+import {
+  addArticleApi,
+  detailArticleApi,
+  generateArticleSummaryApi,
+  updateArticleApi
+} from "../api/article";
 import { optionsCategoryApi } from "../api/category";
 import { parseMarkdownToHtml } from "../utils/markdown";
 
@@ -115,6 +130,7 @@ const categoryOptions = ref([]);
 const saving = ref(false);
 const loadingDetail = ref(false);
 const autoSaving = ref(false);
+const summaryGenerating = ref(false);
 const errorMsg = ref("");
 const autoSaveMessage = ref("");
 const textareaRef = ref(null);
@@ -146,6 +162,8 @@ const previewHtml = computed(() => {
   }
   return parseMarkdownToHtml(form.content);
 });
+
+const canGenerateSummary = computed(() => Boolean(form.title.trim() && form.content.trim()));
 
 function getCurrentArticleId() {
   return articleId.value || draftArticleId.value;
@@ -482,6 +500,41 @@ async function loadDetail() {
     errorMsg.value = error.response?.data?.message || error.message || "获取文章详情失败";
   } finally {
     loadingDetail.value = false;
+  }
+}
+
+async function generateSummary() {
+  if (summaryGenerating.value || !canGenerateSummary.value) {
+    return;
+  }
+
+  if (form.summary.trim()) {
+    const shouldOverwrite = window.confirm("当前已填写摘要，是否使用 AI 结果覆盖？");
+    if (!shouldOverwrite) {
+      return;
+    }
+  }
+
+  summaryGenerating.value = true;
+  errorMsg.value = "";
+
+  try {
+    const res = await generateArticleSummaryApi({
+      title: form.title.trim(),
+      content: form.content.trim(),
+      maxLength: 120
+    });
+
+    if (res.code !== 200) {
+      errorMsg.value = res.message || "生成摘要失败";
+      return;
+    }
+
+    form.summary = res.data?.summary || "";
+  } catch (error) {
+    errorMsg.value = error.response?.data?.message || error.message || "生成摘要失败";
+  } finally {
+    summaryGenerating.value = false;
   }
 }
 

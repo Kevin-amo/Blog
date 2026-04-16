@@ -1,11 +1,15 @@
 package blog.service.impl;
 
 import blog.mapper.CommentMapper;
+import blog.model.LoginUser;
 import blog.pojo.po.Comment;
 import blog.service.CommentService;
 import blog.service.SensitiveWordService;
 import jakarta.annotation.Resource;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import blog.util.PermissionUtil;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -21,6 +25,7 @@ public class CommentServiceImpl implements CommentService {
 
     @Override
     public int addComment(Comment comment) {
+        LoginUser loginUser = PermissionUtil.requireLogin();
         if (comment == null) {
             throw new IllegalArgumentException("评论不能为空！");
         }
@@ -55,6 +60,7 @@ public class CommentServiceImpl implements CommentService {
 
         comment.setStatus(1);
         comment.setIsDeleted(0);
+        comment.setCreateBy(loginUser.getUserId());
         comment.setCreateTime(LocalDateTime.now());
 
         return commentMapper.insertComment(comment);
@@ -66,5 +72,19 @@ public class CommentServiceImpl implements CommentService {
             throw new IllegalArgumentException("文章ID不能为空");
         }
         return commentMapper.selectByArticleId(articleId);
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public void delete(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("评论ID不能为空");
+        }
+
+        Long currentUserId = PermissionUtil.requireLogin().getUserId();
+        int rows = commentMapper.deleteByIdAndCreateBy(id, currentUserId);
+        if (rows == 0) {
+            throw new RuntimeException("评论不存在或无权删除");
+        }
     }
 }

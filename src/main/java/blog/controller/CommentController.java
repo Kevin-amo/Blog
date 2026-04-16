@@ -38,4 +38,14 @@ public class CommentController {
         return Result.success(comments);
     }
 
+    /**
+     * 删除评论
+     */
+    @DeleteMapping("/{id}")
+    @Operation(summary = "删除当前用户自己的评论")
+    public Result<Void> deleteComment(@PathVariable Long id) {
+        commentService.delete(id);
+        return Result.success();
+    }
+
 }

@@ -20,4 +20,10 @@ public interface CommentService {
      */
     List<Comment> listByArticleId(Long articleId);
 
+    /**
+     * 删除当前用户自己的评论
+     * @param id 评论id
+     */
+    void delete(Long id);
+
 }
