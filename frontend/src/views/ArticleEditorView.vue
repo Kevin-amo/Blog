@@ -112,16 +112,18 @@ import { useRoute, useRouter } from "vue-router";
 import {
   addArticleApi,
   detailArticleApi,
-  generateArticleSummaryApi,
+  generateArticleSummaryStreamApi,
   updateArticleApi
 } from "../api/article";
 import { optionsCategoryApi } from "../api/category";
 import { parseMarkdownToHtml } from "../utils/markdown";
+import { finalizeArticleSummary } from "../utils/articleSummary";
 
 const DRAFT_STATUS = 0;
 const PUBLISHED_STATUS = 1;
 const AUTO_SAVE_DELAY = 1200;
 const LOCAL_DRAFT_KEY = "blog_editor_local_draft";
+const ARTICLE_SUMMARY_MAX_LENGTH = 180;
 
 const router = useRouter();
 const route = useRoute();
@@ -134,6 +136,7 @@ const summaryGenerating = ref(false);
 const errorMsg = ref("");
 const autoSaveMessage = ref("");
 const textareaRef = ref(null);
+const summaryAbortController = ref(null);
 
 const hydrating = ref(true);
 const hasPendingChanges = ref(false);
@@ -165,6 +168,14 @@ const previewHtml = computed(() => {
 
 const canGenerateSummary = computed(() => Boolean(form.title.trim() && form.content.trim()));
 
+function abortSummaryStream() {
+  if (!summaryAbortController.value) {
+    return;
+  }
+  summaryAbortController.value.abort();
+  summaryAbortController.value = null;
+}
+
 function getCurrentArticleId() {
   return articleId.value || draftArticleId.value;
 }
@@ -188,7 +199,7 @@ function clearAutoSaveTimer() {
 }
 
 function scheduleAutoSave() {
-  if (saving.value || loadingDetail.value || hydrating.value) {
+  if (saving.value || loadingDetail.value || hydrating.value || summaryGenerating.value) {
     return;
   }
   clearAutoSaveTimer();
@@ -285,7 +296,7 @@ function buildPayload(status) {
 }
 
 async function runAutoSaveDraft() {
-  if (saving.value || loadingDetail.value || hydrating.value || autoSaving.value) {
+  if (saving.value || loadingDetail.value || hydrating.value || autoSaving.value || summaryGenerating.value) {
     return;
   }
   if (!hasPendingChanges.value || !hasDraftContent()) {
@@ -515,26 +526,55 @@ async function generateSummary() {
     }
   }
 
+  abortSummaryStream();
+  const controller = new AbortController();
+  summaryAbortController.value = controller;
   summaryGenerating.value = true;
   errorMsg.value = "";
+  form.summary = "";
+  let streamFailed = false;
 
   try {
-    const res = await generateArticleSummaryApi({
-      title: form.title.trim(),
-      content: form.content.trim(),
-      maxLength: 120
-    });
+    await generateArticleSummaryStreamApi(
+      {
+        title: form.title.trim(),
+        content: form.content.trim(),
+        maxLength: ARTICLE_SUMMARY_MAX_LENGTH
+      },
+      {
+        signal: controller.signal,
+        onChunk: (chunk) => {
+          form.summary += chunk;
+        },
+        onDone: () => {
+          form.summary = finalizeArticleSummary(form.summary, ARTICLE_SUMMARY_MAX_LENGTH);
+        },
+        onError: (message) => {
+          streamFailed = true;
+          errorMsg.value = message || "生成摘要失败";
+        }
+      }
+    );
 
-    if (res.code !== 200) {
-      errorMsg.value = res.message || "生成摘要失败";
+    if (!streamFailed) {
+      form.summary = finalizeArticleSummary(form.summary, ARTICLE_SUMMARY_MAX_LENGTH);
+      if (!form.summary) {
+        errorMsg.value = "生成摘要失败";
+      }
+    }
+  } catch (error) {
+    if (error.name === "AbortError") {
       return;
     }
-
-    form.summary = res.data?.summary || "";
-  } catch (error) {
     errorMsg.value = error.response?.data?.message || error.message || "生成摘要失败";
   } finally {
+    if (summaryAbortController.value === controller) {
+      summaryAbortController.value = null;
+    }
     summaryGenerating.value = false;
+    if (hasPendingChanges.value) {
+      scheduleAutoSave();
+    }
   }
 }
 
@@ -595,6 +635,7 @@ onMounted(async () => {
 
 onBeforeUnmount(() => {
   window.removeEventListener("beforeunload", handleBeforeUnload);
+  abortSummaryStream();
   clearAutoSaveTimer();
   if (hasPendingChanges.value && hasDraftContent() && !saving.value && !loadingDetail.value) {
     saveLocalDraft();

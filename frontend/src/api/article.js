@@ -33,12 +33,6 @@ export function deleteArticleApi(id) {
   return request.delete(`/article/${id}`);
 }
 
-export function generateArticleSummaryApi(payload) {
-  return request.post("/ai/article-summary", payload, {
-    timeout: 120000
-  });
-}
-
 export async function generateArticleSummaryStreamApi(payload, handlers = {}) {
   const baseURL = import.meta.env.VITE_API_BASE || "/api";
   const token = getToken();

@@ -241,9 +241,12 @@ import { generateArticleSummaryStreamApi, publicDetailArticleApi } from "../api/
 import { addCommentApi, deleteCommentApi, listCommentApi } from "../api/comment";
 import { getToken, getUserInfo } from "../utils/auth";
 import { parseMarkdownToHtml } from "../utils/markdown";
+import { finalizeArticleSummary } from "../utils/articleSummary";
 
 const route = useRoute();
 const router = useRouter();
+
+const ARTICLE_SUMMARY_MAX_LENGTH = 120;
 
 const article = ref(null);
 const articleLoading = ref(false);
@@ -508,12 +511,15 @@ async function generateSummary() {
       {
         title: article.value.title.trim(),
         content: article.value.content.trim(),
-        maxLength: 120
+        maxLength: ARTICLE_SUMMARY_MAX_LENGTH
       },
       {
         signal: controller.signal,
         onChunk: (chunk) => {
           aiSummary.value += chunk;
+        },
+        onDone: () => {
+          aiSummary.value = finalizeArticleSummary(aiSummary.value, ARTICLE_SUMMARY_MAX_LENGTH);
         },
         onError: (message) => {
           streamFailed = true;
@@ -521,6 +527,8 @@ async function generateSummary() {
         }
       }
     );
+
+    aiSummary.value = finalizeArticleSummary(aiSummary.value, ARTICLE_SUMMARY_MAX_LENGTH);
     if (!streamFailed && !aiSummary.value) {
       summaryErrorMsg.value = "AI 总结生成失败，请稍后重试";
     }

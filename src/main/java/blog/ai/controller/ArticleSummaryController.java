@@ -1,9 +1,7 @@
 package blog.ai.controller;
 
 import blog.ai.summary.ArticleSummaryService;
-import blog.ai.summary.dto.ArticleSummaryGenerateDTO;
-import blog.ai.summary.vo.ArticleSummaryVO;
-import blog.common.Result.Result;
+import blog.ai.summary.dto.ArticleSummaryDTO;
 import blog.model.LoginUser;
 import blog.util.PermissionUtil;
 import blog.util.UserContext;
@@ -32,24 +30,17 @@ public class ArticleSummaryController {
 
     private final AsyncTaskExecutor applicationTaskExecutor;
 
-    @PostMapping
-    @Operation(summary = "生成文章摘要")
-    public Result<ArticleSummaryVO> generate(@RequestBody @Valid ArticleSummaryGenerateDTO generateDTO) {
-        String summary = articleSummaryService.generateSummary(generateDTO);
-        return Result.success(new ArticleSummaryVO(summary));
-    }
-
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
-    @Operation(summary = "流式生成文章摘要")
-    public SseEmitter generateStream(@RequestBody @Valid ArticleSummaryGenerateDTO generateDTO) {
+    @Operation(summary = "流式生成文章总结")
+    public SseEmitter generateStream(@RequestBody @Valid ArticleSummaryDTO generateDTO) {
         PermissionUtil.requireUser();
         LoginUser loginUser = UserContext.getUser();
-        SseEmitter emitter = new SseEmitter(120000L);
+        SseEmitter emitter = new SseEmitter(60000L);
 
         applicationTaskExecutor.execute(() -> {
             UserContext.setUser(loginUser);
             try {
-                articleSummaryService.generateSummaryStream(generateDTO,
+                articleSummaryService.summaryStream(generateDTO,
                         chunk -> sendEvent(emitter, "chunk", chunk));
                 sendEvent(emitter, "done", "[DONE]");
                 emitter.complete();
