@@ -509,8 +509,7 @@ async function generateSummary() {
   try {
     await generateArticleSummaryStreamApi(
       {
-        title: article.value.title.trim(),
-        content: article.value.content.trim(),
+        articleId: articleId.value,
         maxLength: ARTICLE_SUMMARY_MAX_LENGTH
       },
       {

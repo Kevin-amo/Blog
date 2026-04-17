@@ -7,10 +7,12 @@ import blog.util.PermissionUtil;
 import blog.util.UserContext;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.core.task.AsyncTaskExecutor;
 import org.springframework.http.MediaType;
+import org.springframework.util.StringUtils;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -32,15 +34,16 @@ public class ArticleSummaryController {
 
     @PostMapping(value = "/stream", produces = MediaType.TEXT_EVENT_STREAM_VALUE)
     @Operation(summary = "流式生成文章总结")
-    public SseEmitter generateStream(@RequestBody @Valid ArticleSummaryDTO generateDTO) {
+    public SseEmitter generateStream(@RequestBody @Valid ArticleSummaryDTO generateDTO, HttpServletRequest request) {
         PermissionUtil.requireUser();
         LoginUser loginUser = UserContext.getUser();
+        String clientIp = resolveClientIp(request);
         SseEmitter emitter = new SseEmitter(60000L);
 
         applicationTaskExecutor.execute(() -> {
             UserContext.setUser(loginUser);
             try {
-                articleSummaryService.summaryStream(generateDTO,
+                articleSummaryService.summaryStream(generateDTO, clientIp,
                         chunk -> sendEvent(emitter, "chunk", chunk));
                 sendEvent(emitter, "done", "[DONE]");
                 emitter.complete();
@@ -53,6 +56,18 @@ public class ArticleSummaryController {
         });
 
         return emitter;
+    }
+
+    private String resolveClientIp(HttpServletRequest request) {
+        String forwardedFor = request.getHeader("X-Forwarded-For");
+        if (StringUtils.hasText(forwardedFor)) {
+            return forwardedFor.split(",")[0].trim();
+        }
+        String realIp = request.getHeader("X-Real-IP");
+        if (StringUtils.hasText(realIp)) {
+            return realIp.trim();
+        }
+        return request.getRemoteAddr();
     }
 
     private void sendEvent(SseEmitter emitter, String event, String data) {

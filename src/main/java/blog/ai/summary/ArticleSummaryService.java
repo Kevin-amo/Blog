@@ -13,7 +13,8 @@ public interface ArticleSummaryService {
      * 流式生成文章摘要。
      *
      * @param generateDTO 摘要生成参数
+     * @param clientIp    客户端 IP
      * @param chunkConsumer 摘要分片消费器
      */
-    void summaryStream(ArticleSummaryDTO generateDTO, Consumer<String> chunkConsumer);
+    void summaryStream(ArticleSummaryDTO generateDTO, String clientIp, Consumer<String> chunkConsumer);
 }

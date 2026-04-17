@@ -2,7 +2,7 @@ package blog.ai.summary.dto;
 
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
+import jakarta.validation.constraints.NotNull;
 import lombok.Data;
 
 /**
@@ -11,11 +11,8 @@ import lombok.Data;
 @Data
 public class ArticleSummaryDTO {
 
-    @NotBlank(message = "文章标题不能为空")
-    private String title;
-
-    @NotBlank(message = "文章内容不能为空")
-    private String content;
+    @NotNull(message = "文章ID不能为空")
+    private Long articleId;
 
     @Min(value = 100, message = "摘要长度不能少于 100")
     @Max(value = 300, message = "摘要长度不能超过 300")

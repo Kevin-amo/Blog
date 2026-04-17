@@ -9,6 +9,11 @@ spring:
       chat:
         options:
           multi-model: true
+  data:
+    redis:
+      host: localhost
+      port: 6379
+      database: 1
   datasource:
     url: jdbc:mysql://localhost:3306/blog?useUnicode=true&characterEncoding=utf8&serverTimezone=Asia/Shanghai
     username: root
@@ -48,3 +53,15 @@ springdoc:
     - group: default
       paths-to-match: /**
       packages-to-scan: blog
+
+blog:
+  ai:
+    summary:
+      user-window: 1m
+      user-window-max-requests: 3
+      ip-window: 1m
+      ip-window-max-requests: 10
+      cache-ttl: 12h
+      lock-ttl: 2m
+      wait-timeout: 75s
+      wait-poll-interval: 300ms
