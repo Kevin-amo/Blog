@@ -70,7 +70,7 @@ JWT_SECRET=请改成至少32位的随机字符串
 
 DASHSCOPE_API_KEY=你的DashScope密钥
 DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com
-DASHSCOPE_MODEL=qwen-plus
+DASHSCOPE_MODEL=qwen3.5-flash
 
 ALIYUN_OSS_ENDPOINT=oss-cn-hangzhou.aliyuncs.com
 ALIYUN_OSS_BUCKET_NAME=你的OSS桶名
