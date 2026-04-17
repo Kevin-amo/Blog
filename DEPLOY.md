@@ -69,6 +69,7 @@ MYSQL_ROOT_PASSWORD=请改成你的MySQL强密码
 JWT_SECRET=请改成至少32位的随机字符串
 
 DASHSCOPE_API_KEY=你的DashScope密钥
+DASHSCOPE_BASE_URL=https://dashscope.aliyuncs.com/api/v1
 DASHSCOPE_MODEL=qwen-plus
 
 ALIYUN_OSS_ENDPOINT=oss-cn-hangzhou.aliyuncs.com
@@ -86,6 +87,7 @@ JAVA_OPTS=-Xms256m -Xmx512m
 - `MYSQL_ROOT_PASSWORD`：MySQL root 密码，必须修改
 - `JWT_SECRET`：JWT 签名密钥，建议至少 32 位
 - `DASHSCOPE_API_KEY`：项目中 AI 功能使用的 DashScope Key
+- `DASHSCOPE_BASE_URL`：DashScope 接入地址，默认可使用 `https://dashscope.aliyuncs.com/api/v1`；如果部署环境需要其他接入域名，可在 `.env` 中覆盖
 - `ALIYUN_OSS_*`：头像上传等对象存储功能依赖的 OSS 配置
 - `JAVA_OPTS`：Java 启动参数，可按服务器内存调整
 
