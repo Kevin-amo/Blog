@@ -4,6 +4,7 @@ import blog.ai.summary.dto.ArticleSummaryDTO;
 import blog.ai.summary.prompt.ArticleSummaryPrompt;
 import blog.util.PermissionUtil;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.stereotype.Service;
 import org.springframework.util.StringUtils;
@@ -13,6 +14,7 @@ import java.util.function.Consumer;
 /**
  * 文章 AI 摘要服务实现。
  */
+@Slf4j
 @Service
 @RequiredArgsConstructor
 public class ArticleSummaryServiceImpl implements ArticleSummaryService {
@@ -43,7 +45,12 @@ public class ArticleSummaryServiceImpl implements ArticleSummaryService {
                     })
                     .blockLast();
         } catch (Exception e) {
-            throw new RuntimeException("AI 摘要生成失败，请稍后重试");
+            log.error("AI summary generation failed, title='{}', maxLength={}, contentLength={}",
+                    generateDTO.getTitle(),
+                    generateDTO.getMaxLength(),
+                    generateDTO.getContent() == null ? 0 : generateDTO.getContent().length(),
+                    e);
+            throw new RuntimeException("AI 摘要生成失败，请稍后重试", e);
         }
     }
 
