@@ -246,7 +246,7 @@ import { finalizeArticleSummary } from "../utils/articleSummary";
 const route = useRoute();
 const router = useRouter();
 
-const ARTICLE_SUMMARY_MAX_LENGTH = 120;
+const ARTICLE_SUMMARY_MAX_LENGTH = 180;
 
 const article = ref(null);
 const articleLoading = ref(false);

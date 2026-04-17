@@ -1367,8 +1367,21 @@ p {
   align-items: end;
 }
 
-.article-editor-form-panel .editor-form > label:nth-child(1) {
+.article-editor-form-panel .editor-form > .editor-title-field {
   grid-column: 1 / span 2;
+  width: calc((((100% - 24px) / 3) * 2) + 12px);
+}
+
+.article-editor-form-panel .editor-form > .editor-summary-field {
+  grid-column: 3;
+  grid-row: 1 / span 2;
+  align-self: stretch;
+}
+
+.article-editor-form-panel .editor-form > .editor-summary-field textarea {
+  flex: 1;
+  min-height: 94px;
+  resize: none;
 }
 
 .article-editor-form-panel .editor-form > .editor-grid {
@@ -1422,6 +1435,7 @@ p {
   grid-template-columns: repeat(2, minmax(0, 1fr));
   gap: 14px;
   flex: 1;
+  align-items: start;
 }
 
 .editor-pane {
@@ -1445,11 +1459,12 @@ p {
 .markdown-input {
   width: 100%;
   min-height: 680px;
-  height: clamp(680px, 74vh, 980px);
+  height: auto;
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 12px;
-  resize: vertical;
+  overflow-y: hidden;
+  resize: none;
   line-height: 1.7;
   font-size: 14px;
   font-family: "JetBrains Mono", "Consolas", monospace;
@@ -1464,11 +1479,11 @@ p {
 
 .markdown-preview {
   min-height: 680px;
-  height: clamp(680px, 74vh, 980px);
+  height: auto;
   border: 1px solid var(--line);
   border-radius: 12px;
   padding: 16px;
-  overflow: auto;
+  overflow: hidden;
   background: rgba(254, 255, 255, 0.96);
 }
 
@@ -1891,10 +1906,20 @@ p {
     grid-template-columns: 1fr;
   }
 
-  .article-editor-form-panel .editor-form > label:nth-child(1),
+  .article-editor-form-panel .editor-form > .editor-title-field,
+  .article-editor-form-panel .editor-form > .editor-summary-field,
   .article-editor-form-panel .editor-form > .editor-grid,
   .article-editor-form-panel .editor-form > label:nth-child(4) {
     grid-column: auto;
+    grid-row: auto;
+  }
+
+  .article-editor-form-panel .editor-form > .editor-title-field {
+    width: auto;
+  }
+
+  .article-editor-form-panel .editor-form > .editor-summary-field textarea {
+    min-height: 72px;
   }
 
   .editor-workspace {
@@ -1906,10 +1931,14 @@ p {
     flex-direction: column;
   }
 
-  .markdown-input,
+  .markdown-input {
+    min-height: 58vh;
+    height: auto;
+  }
+
   .markdown-preview {
     min-height: 58vh;
-    height: 58vh;
+    height: auto;
   }
 }
 

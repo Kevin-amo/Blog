@@ -20,6 +20,3 @@ npm run dev
 ```text
 http://localhost:5173
 ```
-
-
-开发环境默认通过 Vite 代理将 `/api/*` 转发到 `http://localhost:8081`。

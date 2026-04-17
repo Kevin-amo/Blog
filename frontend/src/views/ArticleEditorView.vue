@@ -15,23 +15,13 @@
 
     <section class="panel article-editor-form-panel">
       <form class="editor-form" @submit.prevent="submitArticle">
-        <label>
+        <label class="editor-title-field">
           标题
           <input v-model.trim="form.title" type="text" maxlength="100" placeholder="请输入文章标题" />
         </label>
 
-        <label>
-          <span class="field-label-with-action">
-            <span>摘要</span>
-            <button
-              class="ghost-btn"
-              type="button"
-              :disabled="summaryGenerating || !canGenerateSummary"
-              @click="generateSummary"
-            >
-              {{ summaryGenerating ? "生成中..." : "AI 生成摘要" }}
-            </button>
-          </span>
+        <label class="editor-summary-field">
+          <span>摘要</span>
           <textarea
             v-model.trim="form.summary"
             rows="2"
@@ -93,13 +83,14 @@
             ref="textareaRef"
             v-model="form.content"
             class="markdown-input"
+            @input="resizeEditorTextarea"
             placeholder="在这里输入 Markdown 内容..."
           ></textarea>
         </section>
 
         <section class="editor-pane">
           <div class="editor-pane-title">实时预览</div>
-          <div class="markdown-preview markdown-body" v-html="previewHtml"></div>
+          <div ref="previewRef" class="markdown-preview markdown-body" v-html="previewHtml"></div>
         </section>
       </div>
     </section>
@@ -109,21 +100,14 @@
 <script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, reactive, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
-import {
-  addArticleApi,
-  detailArticleApi,
-  generateArticleSummaryStreamApi,
-  updateArticleApi
-} from "../api/article";
+import { addArticleApi, detailArticleApi, updateArticleApi } from "../api/article";
 import { optionsCategoryApi } from "../api/category";
 import { parseMarkdownToHtml } from "../utils/markdown";
-import { finalizeArticleSummary } from "../utils/articleSummary";
 
 const DRAFT_STATUS = 0;
 const PUBLISHED_STATUS = 1;
 const AUTO_SAVE_DELAY = 1200;
 const LOCAL_DRAFT_KEY = "blog_editor_local_draft";
-const ARTICLE_SUMMARY_MAX_LENGTH = 180;
 
 const router = useRouter();
 const route = useRoute();
@@ -132,11 +116,10 @@ const categoryOptions = ref([]);
 const saving = ref(false);
 const loadingDetail = ref(false);
 const autoSaving = ref(false);
-const summaryGenerating = ref(false);
 const errorMsg = ref("");
 const autoSaveMessage = ref("");
 const textareaRef = ref(null);
-const summaryAbortController = ref(null);
+const previewRef = ref(null);
 
 const hydrating = ref(true);
 const hasPendingChanges = ref(false);
@@ -166,14 +149,18 @@ const previewHtml = computed(() => {
   return parseMarkdownToHtml(form.content);
 });
 
-const canGenerateSummary = computed(() => Boolean(form.title.trim() && form.content.trim()));
-
-function abortSummaryStream() {
-  if (!summaryAbortController.value) {
+function resizeEditorTextarea() {
+  const el = textareaRef.value;
+  if (!el) {
     return;
   }
-  summaryAbortController.value.abort();
-  summaryAbortController.value = null;
+  el.style.height = "auto";
+  el.style.height = `${el.scrollHeight}px`;
+
+  if (!previewRef.value) {
+    return;
+  }
+  previewRef.value.style.height = `${el.offsetHeight}px`;
 }
 
 function getCurrentArticleId() {
@@ -199,7 +186,7 @@ function clearAutoSaveTimer() {
 }
 
 function scheduleAutoSave() {
-  if (saving.value || loadingDetail.value || hydrating.value || summaryGenerating.value) {
+  if (saving.value || loadingDetail.value || hydrating.value) {
     return;
   }
   clearAutoSaveTimer();
@@ -227,6 +214,15 @@ watch(
   ],
   () => {
     markDirty();
+  }
+);
+
+watch(
+  () => form.content,
+  () => {
+    nextTick(() => {
+      resizeEditorTextarea();
+    });
   }
 );
 
@@ -267,6 +263,9 @@ function loadLocalDraft() {
     form.coverUrl = data.coverUrl || "";
     form.categoryId = data.categoryId || "";
     form.isTop = data.isTop != null ? String(data.isTop) : "0";
+    nextTick(() => {
+      resizeEditorTextarea();
+    });
   } catch {
     localStorage.removeItem(LOCAL_DRAFT_KEY);
   }
@@ -296,7 +295,7 @@ function buildPayload(status) {
 }
 
 async function runAutoSaveDraft() {
-  if (saving.value || loadingDetail.value || hydrating.value || autoSaving.value || summaryGenerating.value) {
+  if (saving.value || loadingDetail.value || hydrating.value || autoSaving.value) {
     return;
   }
   if (!hasPendingChanges.value || !hasDraftContent()) {
@@ -367,6 +366,7 @@ async function goBack() {
 function applyContentAndSelection(nextValue, start, end) {
   form.content = nextValue;
   nextTick(() => {
+    resizeEditorTextarea();
     if (!textareaRef.value) {
       return;
     }
@@ -507,74 +507,12 @@ async function loadDetail() {
     form.coverUrl = detail.coverUrl || "";
     form.categoryId = detail.categoryId ? String(detail.categoryId) : "";
     form.isTop = detail.isTop != null ? String(detail.isTop) : "0";
+    await nextTick();
+    resizeEditorTextarea();
   } catch (error) {
     errorMsg.value = error.response?.data?.message || error.message || "获取文章详情失败";
   } finally {
     loadingDetail.value = false;
-  }
-}
-
-async function generateSummary() {
-  if (summaryGenerating.value || !canGenerateSummary.value) {
-    return;
-  }
-
-  if (form.summary.trim()) {
-    const shouldOverwrite = window.confirm("当前已填写摘要，是否使用 AI 结果覆盖？");
-    if (!shouldOverwrite) {
-      return;
-    }
-  }
-
-  abortSummaryStream();
-  const controller = new AbortController();
-  summaryAbortController.value = controller;
-  summaryGenerating.value = true;
-  errorMsg.value = "";
-  form.summary = "";
-  let streamFailed = false;
-
-  try {
-    await generateArticleSummaryStreamApi(
-      {
-        title: form.title.trim(),
-        content: form.content.trim(),
-        maxLength: ARTICLE_SUMMARY_MAX_LENGTH
-      },
-      {
-        signal: controller.signal,
-        onChunk: (chunk) => {
-          form.summary += chunk;
-        },
-        onDone: () => {
-          form.summary = finalizeArticleSummary(form.summary, ARTICLE_SUMMARY_MAX_LENGTH);
-        },
-        onError: (message) => {
-          streamFailed = true;
-          errorMsg.value = message || "生成摘要失败";
-        }
-      }
-    );
-
-    if (!streamFailed) {
-      form.summary = finalizeArticleSummary(form.summary, ARTICLE_SUMMARY_MAX_LENGTH);
-      if (!form.summary) {
-        errorMsg.value = "生成摘要失败";
-      }
-    }
-  } catch (error) {
-    if (error.name === "AbortError") {
-      return;
-    }
-    errorMsg.value = error.response?.data?.message || error.message || "生成摘要失败";
-  } finally {
-    if (summaryAbortController.value === controller) {
-      summaryAbortController.value = null;
-    }
-    summaryGenerating.value = false;
-    if (hasPendingChanges.value) {
-      scheduleAutoSave();
-    }
   }
 }
 
@@ -630,12 +568,13 @@ onMounted(async () => {
   await loadDetail();
   loadLocalDraft();
   hydrating.value = false;
+  await nextTick();
+  resizeEditorTextarea();
   window.addEventListener("beforeunload", handleBeforeUnload);
 });
 
 onBeforeUnmount(() => {
   window.removeEventListener("beforeunload", handleBeforeUnload);
-  abortSummaryStream();
   clearAutoSaveTimer();
   if (hasPendingChanges.value && hasDraftContent() && !saving.value && !loadingDetail.value) {
     saveLocalDraft();

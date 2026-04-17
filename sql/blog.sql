@@ -11,7 +11,7 @@
  Target Server Version : 80012 (8.0.12)
  File Encoding         : 65001
 
- Date: 16/04/2026 14:48:29
+ Date: 16/04/2026 20:23:55
 */
 
 SET NAMES utf8mb4;
@@ -44,7 +44,7 @@ CREATE TABLE `article`  (
   INDEX `idx_status`(`status` ASC) USING BTREE,
   INDEX `idx_is_top`(`is_top` ASC) USING BTREE,
   INDEX `idx_is_deleted`(`is_deleted` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 4 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '文章表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 6 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '文章表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of article
@@ -52,6 +52,8 @@ CREATE TABLE `article`  (
 INSERT INTO `article` VALUES (1, '测试文章1', '', '## 测试\n\n> 这是一篇测试文章', '', 1, 1, 0, 0, 2, 1, 2, '2026-03-29 14:48:59', 1, '2026-04-15 11:28:31', 0);
 INSERT INTO `article` VALUES (2, 'testQPS', '', '测试3s自动保存草稿撒撒你的阿斯利康士大夫老大是客服会尽量快点撒辣椒粉客户大师复活节卡的萨芬和框架十大是 发 撒 阿斯 是sdfdsafdsawho you are\ndnishifcddddf', '', 2, 0, 0, 0, 0, 0, 2, '2026-03-29 18:41:01', 2, '2026-04-16 11:00:09', 0);
 INSERT INTO `article` VALUES (3, '测试驳回', '', '## 搓泥娘的撇', '', 2, 1, 0, 0, 0, 2, 2, '2026-03-29 18:49:19', 1, '2026-03-29 18:50:54', 0);
+INSERT INTO `article` VALUES (4, '深入浅出理解MySQL索引：优化查询性能的核心技巧', NULL, '## 一、索引的核心作用（为什么需要索引？）\n在数据库开发中，**查询性能**是系统可用性的核心指标。当表数据量达到万级、十万级以上，全表扫描会导致查询延迟飙升，而索引就相当于数据库的“目录”，能让MySQL快速定位目标数据，避免全表扫描，大幅提升查询效率。\n\n## 二、常用索引类型及适用场景\nMySQL中最常用的索引类型有2种，各有适用场景，避免用错导致性能浪费：\n- **B+树索引**（InnoDB默认）：支持范围查询、排序、分页，适用于绝大多数业务场景（如用户查询、订单查询）。\n- **哈希索引**：仅支持等值查询，适用于高频等值匹配场景（如缓存查询）。\n\n## 三、索引设计核心原则（避坑关键）\n### 3.1 合理创建索引\n1. 优先为**高频查询字段**建索引（如用户表`phone`、订单表`order_no`）；\n2. 避免过度索引（过多索引会增加插入/更新开销，需同步维护索引）；\n3. 联合索引遵循**最左前缀原则**，例：`index(a,b,c)`，仅`a`、`a+b`、`a+b+c`能命中索引。\n\n### 3.2 避免索引失效\n以下操作会导致索引失效，务必避开：\n```sql\n-- 错误示例：索引字段用函数，导致失效\nSELECT * FROM user WHERE SUBSTR(phone, 1, 3) = \'138\';\n-- 错误示例：隐式类型转换，导致失效\nSELECT * FROM user WHERE phone = 13800138000;', NULL, 1, 1, 0, 0, 0, 1, 2, '2026-04-16 15:40:33', 2, '2026-04-16 15:40:33', 0);
+INSERT INTO `article` VALUES (5, '从零理解 RAG：为什么大模型需要“外挂知识库”', NULL, '## 摘要\n\n检索增强生成（RAG，Retrieval-Augmented Generation）已经成为大模型落地中最常见的架构之一。它的核心思路并不复杂：**先检索，再生成**。也就是说，在模型回答问题之前，先从外部知识库中找出最相关的资料，再把这些资料连同用户问题一起交给大模型生成答案。这样做可以显著降低“幻觉”，提升时效性，并让模型具备面向企业私有数据的问答能力。\n\n这篇文章会从问题背景、基本原理、系统架构、关键模块、常见误区和工程实践几个方面，完整介绍 RAG 的设计思路。\n\n---\n\n## 一、为什么只靠大模型参数不够\n\n很多人第一次接触大模型时，会默认认为：模型参数越大，知道的东西就越多，回答也就越准确。这种想法只对了一半。\n\n大模型确实在预训练阶段“见过”大量文本，但它依然存在几个天然限制：\n\n### 1. 知识是静态的\n\n模型训练完成后，参数基本冻结。它不知道训练之后发生的新事件，也不了解你公司昨天刚更新的内部文档。\n\n### 2. 无法记住所有细节\n\n即使模型“学到”过某些知识，也不意味着它能稳定、精准地在推理时调取出来。尤其是长尾知识、冷门术语、版本细节、数字配置，很容易出错。\n\n### 3. 企业场景需要私有数据\n\n很多业务问题并不在公开互联网，而在内部 Wiki、产品文档、会议纪要、代码仓库、客服工单、合同或操作手册里。单靠预训练模型无法直接回答这些问题。\n\n### 4. 幻觉问题难以避免\n\n模型是概率生成系统，不是数据库。它会根据上下文“猜一个最像答案的答案”。当缺乏足够依据时，就可能编造出看起来合理但其实错误的内容。\n\n---', NULL, 1, 1, 0, 0, 0, 1, 2, '2026-04-16 15:43:36', 2, '2026-04-16 15:43:53', 0);
 
 -- ----------------------------
 -- Table structure for category
@@ -93,7 +95,7 @@ CREATE TABLE `comment`  (
   INDEX `idx_comment_article_id`(`article_id` ASC) USING BTREE,
   INDEX `idx_comment_parent_id`(`parent_id` ASC) USING BTREE,
   INDEX `idx_comment_create_by`(`create_by` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 13 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of comment
@@ -102,11 +104,14 @@ INSERT INTO `comment` VALUES (1, 1, 0, '测试用户', '测试评论123', 1, 0, 
 INSERT INTO `comment` VALUES (2, 1, 0, '测试用户', '****', 1, 0, 2, '2026-04-15 21:46:01');
 INSERT INTO `comment` VALUES (3, 1, 0, '测试用户', '测试', 1, 0, 2, '2026-04-15 21:46:30');
 INSERT INTO `comment` VALUES (4, 1, 0, '测试用户', '****是不是违禁词', 1, 0, 2, '2026-04-15 21:46:48');
-INSERT INTO `comment` VALUES (5, 1, 0, '测试用户', '走一梦是**', 1, 0, 2, '2026-04-15 21:47:05');
-INSERT INTO `comment` VALUES (6, 1, 0, '测试用户', '死了没', 1, 0, 2, '2026-04-15 21:49:31');
-INSERT INTO `comment` VALUES (7, 1, 6, '普通用户-测试1', '**妈', 1, 0, 2, '2026-04-16 10:47:05');
-INSERT INTO `comment` VALUES (8, 1, 6, '普通用户-测试1', '123', 1, 0, 2, '2026-04-16 10:47:15');
-INSERT INTO `comment` VALUES (9, 1, 0, '普通用户-测试1', '****', 1, 0, 2, '2026-04-16 14:29:03');
+INSERT INTO `comment` VALUES (5, 1, 0, '测试用户', '走一梦是**', 1, 1, 2, '2026-04-15 21:47:05');
+INSERT INTO `comment` VALUES (6, 1, 0, '测试用户', '死了没', 1, 1, 2, '2026-04-15 21:49:31');
+INSERT INTO `comment` VALUES (7, 1, 6, '普通用户-测试1', '**妈', 1, 1, 2, '2026-04-16 10:47:05');
+INSERT INTO `comment` VALUES (8, 1, 6, '普通用户-测试1', '123', 1, 1, 2, '2026-04-16 10:47:15');
+INSERT INTO `comment` VALUES (9, 1, 0, '普通用户-测试1', '****', 1, 1, 2, '2026-04-16 14:29:03');
+INSERT INTO `comment` VALUES (10, 1, 9, 'admin', '管理员测试回复', 1, 0, 1, '2026-04-16 14:51:38');
+INSERT INTO `comment` VALUES (11, 1, 9, 'admin', '测试回复1', 1, 0, 1, '2026-04-16 14:51:48');
+INSERT INTO `comment` VALUES (12, 1, 9, '普通用户-测试1', '123', 1, 1, 2, '2026-04-16 15:06:10');
 
 -- ----------------------------
 -- Table structure for user
