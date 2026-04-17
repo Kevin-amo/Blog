@@ -40,25 +40,19 @@ cd /opt/blog
 
 然后把本项目代码上传到这个目录。
 
-最终目录中至少应包含以下文件：
+最终目录中至少应包含以下文件和目录：
 
 - `Dockerfile`
 - `docker-compose.yml`
-- `.env.example`
 - `frontend/nginx.conf`
 - `src/`
 - `frontend/`
+- `sql/`
 - `pom.xml`
 
 ## 4. 配置环境变量
 
-先复制示例配置：
-
-```bash
-cp .env .env
-```
-
-然后编辑 `.env`：
+在项目根目录创建或编辑 `.env`：
 
 ```bash
 vim .env
@@ -143,21 +137,30 @@ docker compose logs -f mysql
 
 ## 6. 初始化数据库
 
-当前仓库中我没有发现自动初始化数据库的 SQL 文件，因此 `docker-compose.yml` 只会自动创建数据库 `blog`，不会自动创建表结构。
+仓库已提供 `sql/blog.sql`，并且 `docker-compose.yml` 已将本地 `sql/` 目录挂载到 MySQL 容器的 `/docker-entrypoint-initdb.d`。
 
-你需要手动导入项目现有的 SQL 脚本或数据库备份。
+因此在 **首次启动且 MySQL 数据卷为空** 时，MySQL 会自动执行 `sql/` 目录中的 `.sql` 脚本完成初始化。
 
-如果你手头已经有 `blog.sql`，可以这样导入：
-
-```bash
-docker exec -i blog-mysql mysql -uroot -p你的密码 blog < blog.sql
-```
-
-导入完成后，再重启后端：
+如果你是第一次部署，直接执行：
 
 ```bash
-docker compose restart backend
+docker compose up -d --build
 ```
+
+然后查看数据库日志，确认初始化完成：
+
+```bash
+docker compose logs -f mysql
+```
+
+如果你之前已经启动过 MySQL，`mysql-data` 数据卷里已有数据，那么初始化脚本不会再次自动执行。此时如需重新初始化，可先删除数据卷后重新启动：
+
+```bash
+docker compose down -v
+docker compose up -d --build
+```
+
+注意：执行 `docker compose down -v` 会删除已有 MySQL 数据，请确认后再操作。
 
 ## 7. 访问与验证
 
@@ -267,5 +270,5 @@ docker compose up -d --build
 - `Dockerfile`
 - `docker-compose.yml`
 - `frontend/nginx.conf`
-- `.env.example`
+- `sql/blog.sql`
 - `.dockerignore`
