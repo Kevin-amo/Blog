@@ -85,6 +85,7 @@
       - backend
     ports:
       - "${APP_PORT:-80}:80"
+      - "${APP_PORT:-443}:443"
     networks:
       - blog-net
 
