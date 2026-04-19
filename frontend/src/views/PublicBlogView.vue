@@ -7,9 +7,48 @@
           <button class="blog-nav-link" :class="{ active: activeNav === 'home' }" type="button" @click="goHome">
             首页
           </button>
-          <button class="blog-nav-link" :class="{ active: activeNav === 'category' }" type="button" @click="goCategory">
-            分类
-          </button>
+          <div ref="categoryDropdownRef" class="blog-nav-dropdown" @mouseenter="openCategoryDropdown">
+            <button
+              class="blog-nav-link"
+              :class="{ active: activeNav === 'category' || categoryDropdownOpen }"
+              type="button"
+              :aria-expanded="categoryDropdownOpen"
+              @click="toggleCategoryDropdown"
+            >
+              分类
+            </button>
+            <transition name="dropdown-fade">
+              <div
+                v-if="categoryDropdownOpen"
+                class="blog-nav-dropdown-menu"
+                role="menu"
+                aria-label="分类筛选"
+              >
+                <p v-if="categoryLoading" class="blog-nav-dropdown-state muted">正在加载分类...</p>
+                <p v-else-if="categoryErrorMsg" class="blog-nav-dropdown-state error-msg">{{ categoryErrorMsg }}</p>
+                <template v-else>
+                  <button
+                    class="blog-nav-dropdown-item"
+                    :class="{ active: selectedCategoryId === '' }"
+                    type="button"
+                    @click="selectCategory('')"
+                  >
+                    全部分类
+                  </button>
+                  <button
+                    v-for="item in categories"
+                    :key="item.id"
+                    class="blog-nav-dropdown-item"
+                    :class="{ active: selectedCategoryId === String(item.id) }"
+                    type="button"
+                    @click="selectCategory(String(item.id))"
+                  >
+                    {{ item.name }}
+                  </button>
+                </template>
+              </div>
+            </transition>
+          </div>
           <button class="blog-nav-link" :class="{ active: activeNav === 'about' }" type="button" @click="goAbout">
             关于我
           </button>
@@ -35,49 +74,7 @@
       </div>
     </section>
 
-    <section v-else :class="['content-layout', currentView === 'category' ? 'public-blog-layout' : 'public-blog-layout-full']">
-      <aside v-if="currentView === 'category'" class="content-sidebar public-category-sidebar">
-        <section class="panel sidebar-panel">
-          <div class="section-head section-head-compact">
-            <div>
-              <p class="panel-title">分类</p>
-              <p class="muted">选择一个分类筛选文章</p>
-            </div>
-            <button
-              v-if="selectedCategoryId !== ''"
-              class="ghost-btn"
-              type="button"
-              @click="resetCategoryFilter"
-            >
-              清除
-            </button>
-          </div>
-
-          <div v-if="categoryLoading" class="muted">正在加载分类...</div>
-          <p v-else-if="categoryErrorMsg" class="error-msg">{{ categoryErrorMsg }}</p>
-          <div v-else class="category-menu">
-            <button
-              class="category-menu-item"
-              :class="{ active: selectedCategoryId === '' }"
-              type="button"
-              @click="selectCategory('')"
-            >
-              全部分类
-            </button>
-            <button
-              v-for="item in categories"
-              :key="item.id"
-              class="category-menu-item"
-              :class="{ active: selectedCategoryId === String(item.id) }"
-              type="button"
-              @click="selectCategory(String(item.id))"
-            >
-              {{ item.name }}
-            </button>
-          </div>
-        </section>
-      </aside>
-
+    <section v-else class="content-layout public-blog-layout-full">
       <section class="content-main">
         <section class="panel list-panel">
           <div class="section-head blog-list-head">
@@ -86,7 +83,7 @@
               <p class="muted">共 {{ pager.total }} 篇文章，每页 5 篇</p>
             </div>
             <button
-              v-if="currentView === 'category' && selectedCategoryId !== ''"
+              v-if="selectedCategoryId !== ''"
               class="ghost-btn"
               type="button"
               @click="resetCategoryFilter"
@@ -144,7 +141,7 @@
 </template>
 
 <script setup>
-import { computed, onMounted, ref } from "vue";
+import { computed, onBeforeUnmount, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 import { publicPageArticleApi } from "../api/article";
 import { optionsCategoryApi } from "../api/category";
@@ -160,13 +157,23 @@ const categoryErrorMsg = ref("");
 const currentView = ref("home");
 const searchKeyword = ref("");
 const selectedCategoryId = ref("");
+const categoryDropdownOpen = ref(false);
+const categoryDropdownRef = ref(null);
 const pager = ref({
   pageNum: 1,
   pageSize: 5,
   total: 0
 });
 
-const activeNav = computed(() => currentView.value);
+const activeNav = computed(() => {
+  if (currentView.value === "about") {
+    return "about";
+  }
+  if (selectedCategoryId.value) {
+    return "category";
+  }
+  return "home";
+});
 const categoryNameMap = computed(() => {
   const map = {};
   for (const item of categories.value) {
@@ -181,7 +188,7 @@ const currentCategoryName = computed(() => {
   return categoryNameMap.value[Number(selectedCategoryId.value)] || "当前分类";
 });
 const listTitle = computed(() => {
-  if (currentView.value === "category" && currentCategoryName.value) {
+  if (currentCategoryName.value) {
     return `${currentCategoryName.value} · 分类文章`;
   }
   if (searchKeyword.value) {
@@ -267,39 +274,63 @@ async function loadArticles() {
   }
 }
 
+function closeCategoryDropdown() {
+  categoryDropdownOpen.value = false;
+}
+
+function openCategoryDropdown() {
+  currentView.value = "home";
+  categoryDropdownOpen.value = true;
+}
+
+function toggleCategoryDropdown() {
+  currentView.value = "home";
+  categoryDropdownOpen.value = !categoryDropdownOpen.value;
+}
+
+function handleDocumentClick(event) {
+  if (!categoryDropdownRef.value?.contains(event.target)) {
+    closeCategoryDropdown();
+  }
+}
+
 function goHome() {
   currentView.value = "home";
   selectedCategoryId.value = "";
   pager.value.pageNum = 1;
+  closeCategoryDropdown();
   loadArticles();
 }
 
 function goCategory() {
-  currentView.value = "category";
-  pager.value.pageNum = 1;
-  loadArticles();
+  toggleCategoryDropdown();
 }
 
 function goAbout() {
   currentView.value = "about";
+  closeCategoryDropdown();
 }
 
 function handleSearch() {
   currentView.value = "home";
   pager.value.pageNum = 1;
+  closeCategoryDropdown();
   loadArticles();
 }
 
 function selectCategory(categoryId) {
-  currentView.value = "category";
+  currentView.value = "home";
   selectedCategoryId.value = categoryId;
   pager.value.pageNum = 1;
+  closeCategoryDropdown();
   loadArticles();
 }
 
 function resetCategoryFilter() {
+  currentView.value = "home";
   selectedCategoryId.value = "";
   pager.value.pageNum = 1;
+  closeCategoryDropdown();
   loadArticles();
 }
 
@@ -312,10 +343,16 @@ function goPage(pageNum) {
 }
 
 function openArticle(id) {
+  closeCategoryDropdown();
   router.push({ name: "public-blog-detail", params: { id } });
 }
 
 onMounted(async () => {
+  document.addEventListener("click", handleDocumentClick);
   await Promise.all([loadCategories(), loadArticles()]);
+});
+
+onBeforeUnmount(() => {
+  document.removeEventListener("click", handleDocumentClick);
 });
 </script>
