@@ -13,6 +13,10 @@ export function publicListArticleApi(params) {
   return request.get("/article/public/list", { params });
 }
 
+export function publicPageArticleApi(params) {
+  return request.get("/article/public/page", { params });
+}
+
 export function detailArticleApi(id) {
   return request.get(`/article/${id}`);
 }

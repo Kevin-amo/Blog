@@ -110,6 +110,29 @@ public class ArticleServiceImpl implements ArticleService {
     }
 
     /**
+     * 分页查询公开已发布文章列表。
+     *
+     * @param queryDTO 查询参数
+     * @return 分页结果
+     */
+    @Override
+    public PageResult<ArticleVO> pagePublished(ArticlePageQueryDTO queryDTO) {
+        PageHelper.startPage(queryDTO.getPageNum(), queryDTO.getPageSize());
+        ArticleQueryDTO publicQuery = new ArticleQueryDTO();
+        publicQuery.setTitle(queryDTO.getTitle());
+        publicQuery.setCategoryId(queryDTO.getCategoryId());
+        List<Article> articleList = articleMapper.selectPublishedList(publicQuery);
+        PageInfo<Article> pageInfo = new PageInfo<>(articleList);
+        List<ArticleVO> records = new ArrayList<>(pageInfo.getList().size());
+        for (Article article : pageInfo.getList()) {
+            ArticleVO vo = new ArticleVO();
+            BeanUtils.copyProperties(article, vo);
+            records.add(vo);
+        }
+        return new PageResult<>(pageInfo.getTotal(), records);
+    }
+
+    /**
      * 查询当前用户文章详情。
      *
      * @param id 文章ID

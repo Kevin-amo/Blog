@@ -4,6 +4,8 @@ import RegisterView from "../views/RegisterView.vue";
 import UserDashboardView from "../views/UserDashboardView.vue";
 import AdminDashboardView from "../views/AdminDashboardView.vue";
 import PublicBlogView from "../views/PublicBlogView.vue";
+import PublicCategoryView from "../views/PublicCategoryView.vue";
+import PublicAboutView from "../views/PublicAboutView.vue";
 import PublicBlogDetailView from "../views/PublicBlogDetailView.vue";
 import ArticleEditorView from "../views/ArticleEditorView.vue";
 import { clearAuth, getCurrentHomePath, getToken, getUserRole } from "../utils/auth";
@@ -13,6 +15,16 @@ const routes = [
     path: "/",
     name: "public-blog",
     component: PublicBlogView
+  },
+  {
+    path: "/category",
+    name: "public-category",
+    component: PublicCategoryView
+  },
+  {
+    path: "/about",
+    name: "public-about",
+    component: PublicAboutView
   },
   {
     path: "/blog/:id",
