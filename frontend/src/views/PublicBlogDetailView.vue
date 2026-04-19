@@ -1,187 +1,112 @@
 <template>
-  <main class="home-page public-detail-page">
-    <header class="topbar">
-      <div>
+  <main class="home-page public-detail-page site-shell">
+    <header class="site-header detail-header">
+      <div class="site-brand">
         <p class="eyebrow">Wavelog Blog</p>
-        <h1>博客全文</h1>
+        <h1>文章详情</h1>
+        <p class="site-description">正文、评论和 AI 总结分区展示，优先保证阅读连续性。</p>
       </div>
-      <a class="ghost-btn" href="/">返回首页</a>
+      <div class="site-header-actions">
+        <a class="ghost-btn" href="/">返回首页</a>
+      </div>
     </header>
 
-    <section class="panel">
-      <div v-if="articleLoading" class="muted">正在加载正文...</div>
-      <p v-else-if="articleErrorMsg" class="error-msg">{{ articleErrorMsg }}</p>
+    <section class="content-layout detail-layout">
+      <section class="content-main">
+        <section class="panel article-panel-simple">
+          <div v-if="articleLoading" class="muted">正在加载正文...</div>
+          <p v-else-if="articleErrorMsg" class="error-msg">{{ articleErrorMsg }}</p>
 
-      <article v-else-if="article" class="public-article-detail">
-        <h2>{{ article.title }}</h2>
-        <p class="public-meta">
-          发布时间：{{ formatDate(article.createTime) }}
-          <span v-if="article.updateTime"> · 更新时间：{{ formatDate(article.updateTime) }}</span>
-        </p>
-        <div class="markdown-body" v-html="detailHtml"></div>
-
-        <div class="article-ai-actions">
-          <div v-if="!isLoggedIn" class="article-ai-hint">登录后可使用 AI 总结</div>
-          <button
-            class="ghost-btn article-ai-btn"
-            type="button"
-            :disabled="summaryGenerating || !canGenerateSummary"
-            @click="generateSummary"
-          >
-            {{ summaryGenerating ? "生成中..." : "AI总结" }}
-          </button>
-        </div>
-
-        <p v-if="summaryErrorMsg" class="error-msg article-ai-feedback">{{ summaryErrorMsg }}</p>
-
-        <section
-          v-if="hasRequestedSummary && (aiSummary || summaryGenerating)"
-          class="article-ai-summary-card"
-          aria-live="polite"
-        >
-          <p class="article-ai-summary-eyebrow">AI总结</p>
-          <p v-if="aiSummary" class="article-ai-summary-content">{{ aiSummary }}</p>
-          <p v-else class="muted">AI 正在整理这篇文章的重点...</p>
-        </section>
-      </article>
-
-      <div v-else class="empty-state">文章不存在或暂未发布。</div>
-    </section>
-
-    <section class="panel comment-panel">
-      <div class="comment-panel-head">
-        <div>
-          <p class="panel-title">评论区</p>
-          <p class="muted">共 {{ commentCount }} 条评论</p>
-        </div>
-      </div>
-
-      <form v-if="isLoggedIn" class="comment-editor" @submit.prevent="submitComment">
-        <div class="comment-editor-head">
-          <p class="comment-editor-title">发表评论</p>
-          <span class="comment-counter">{{ commentForm.content.trim().length }}/1000</span>
-        </div>
-        <label class="comment-textarea-wrap">
-          <span class="sr-only">评论内容</span>
-          <textarea
-            v-model="commentForm.content"
-            maxlength="1000"
-            rows="4"
-            placeholder="写下你的想法..."
-          ></textarea>
-        </label>
-        <p v-if="commentSubmitError" class="error-msg">{{ commentSubmitError }}</p>
-        <div class="comment-editor-actions">
-          <button class="submit-btn" type="submit" :disabled="commentSubmitting">
-            {{ commentSubmitting ? "提交中..." : "发表评论" }}
-          </button>
-        </div>
-      </form>
-
-      <div v-else class="comment-login-card">
-        <div>
-          <p class="comment-editor-title">登录后参与评论</p>
-        </div>
-        <button class="submit-btn" type="button" @click="goToLogin">前往登录</button>
-      </div>
-
-      <div v-if="commentLoading" class="muted comment-feedback">正在加载评论...</div>
-      <p v-else-if="commentErrorMsg" class="error-msg comment-feedback">{{ commentErrorMsg }}</p>
-      <div v-else-if="!commentTree.length" class="empty-state">还没有评论，来留下第一条评论吧。</div>
-
-      <div v-else class="comment-list">
-        <article v-for="parent in commentTree" :key="parent.id" class="comment-card">
-          <div class="comment-card-head">
-            <div>
-              <p class="comment-author">{{ parent.nickname || "游客" }}</p>
-              <p class="comment-time">{{ formatDate(parent.createTime) }}</p>
+          <article v-else-if="article" class="public-article-detail">
+            <div class="article-title-block">
+              <h2>{{ article.title }}</h2>
+              <p class="public-meta">
+                发布时间：{{ formatDate(article.createTime) }}
+                <span v-if="article.updateTime"> · 更新时间：{{ formatDate(article.updateTime) }}</span>
+              </p>
             </div>
-            <div class="comment-card-actions">
-              <button
-                v-if="!isDeletedComment(parent)"
-                class="link-btn"
-                type="button"
-                :disabled="!isLoggedIn"
-                @click="openReply(parent, parent)"
-              >
-                回复
-              </button>
-              <button
-                v-if="canDeleteComment(parent)"
-                class="danger-link-btn"
-                type="button"
-                :disabled="deletingCommentId === parent.id"
-                @click="handleDeleteComment(parent)"
-              >
-                {{ deletingCommentId === parent.id ? "删除中..." : "删除" }}
-              </button>
+            <div class="markdown-body detail-markdown" v-html="detailHtml"></div>
+          </article>
+
+          <div v-else class="empty-state">文章不存在或暂未发布。</div>
+        </section>
+
+        <section class="panel comment-panel">
+          <div class="section-head comment-panel-head">
+            <div>
+              <p class="panel-title">评论区</p>
+              <p class="muted">共 {{ commentCount }} 条评论</p>
             </div>
           </div>
-          <p class="comment-content" :class="{ 'comment-content-deleted': isDeletedComment(parent) }">
-            {{ getCommentContent(parent) }}
-          </p>
 
-          <form
-            v-if="replyForm.targetId === parent.id"
-            class="comment-reply-form"
-            @submit.prevent="submitReply"
-          >
+          <form v-if="isLoggedIn" class="comment-editor" @submit.prevent="submitComment">
             <div class="comment-editor-head">
-              <div>
-                <p class="comment-editor-title">回复 @{{ replyForm.targetNickname }}</p>
-              </div>
-              <span class="comment-counter">{{ replyForm.content.trim().length }}/1000</span>
+              <p class="comment-editor-title">发表评论</p>
+              <span class="comment-counter">{{ commentForm.content.trim().length }}/1000</span>
             </div>
             <label class="comment-textarea-wrap">
-              <span class="sr-only">回复内容</span>
+              <span class="sr-only">评论内容</span>
               <textarea
-                v-model="replyForm.content"
+                v-model="commentForm.content"
                 maxlength="1000"
-                rows="3"
-                placeholder="写下你的回复..."
+                rows="4"
+                placeholder="写下你的想法..."
               ></textarea>
             </label>
-            <p v-if="replySubmitError" class="error-msg">{{ replySubmitError }}</p>
+            <p v-if="commentSubmitError" class="error-msg">{{ commentSubmitError }}</p>
             <div class="comment-editor-actions">
-              <button class="ghost-btn" type="button" @click="cancelReply">取消</button>
-              <button class="submit-btn" type="submit" :disabled="replySubmitting">
-                {{ replySubmitting ? "提交中..." : "回复" }}
+              <button class="submit-btn" type="submit" :disabled="commentSubmitting">
+                {{ commentSubmitting ? "提交中..." : "发表评论" }}
               </button>
             </div>
           </form>
 
-          <div v-if="parent.replies.length" class="comment-reply-list">
-            <article v-for="reply in parent.replies" :key="reply.id" class="comment-reply-card">
+          <div v-else class="comment-login-card">
+            <div>
+              <p class="comment-editor-title">登录后参与评论</p>
+            </div>
+            <button class="submit-btn" type="button" @click="goToLogin">前往登录</button>
+          </div>
+
+          <div v-if="commentLoading" class="muted comment-feedback">正在加载评论...</div>
+          <p v-else-if="commentErrorMsg" class="error-msg comment-feedback">{{ commentErrorMsg }}</p>
+          <div v-else-if="!commentTree.length" class="empty-state">还没有评论，来留下第一条评论吧。</div>
+
+          <div v-else class="comment-list">
+            <article v-for="parent in commentTree" :key="parent.id" class="comment-card">
               <div class="comment-card-head">
                 <div>
-                  <p class="comment-author">{{ reply.nickname || "游客" }}</p>
-                  <p class="comment-time">{{ formatDate(reply.createTime) }}</p>
+                  <p class="comment-author">{{ parent.nickname || "游客" }}</p>
+                  <p class="comment-time">{{ formatDate(parent.createTime) }}</p>
                 </div>
                 <div class="comment-card-actions">
                   <button
+                    v-if="!isDeletedComment(parent)"
                     class="link-btn"
                     type="button"
                     :disabled="!isLoggedIn"
-                    @click="openReply(reply, parent)"
+                    @click="openReply(parent, parent)"
                   >
                     回复
                   </button>
                   <button
-                    v-if="canDeleteComment(reply)"
+                    v-if="canDeleteComment(parent)"
                     class="danger-link-btn"
                     type="button"
-                    :disabled="deletingCommentId === reply.id"
-                    @click="handleDeleteComment(reply)"
+                    :disabled="deletingCommentId === parent.id"
+                    @click="handleDeleteComment(parent)"
                   >
-                    {{ deletingCommentId === reply.id ? "删除中..." : "删除" }}
+                    {{ deletingCommentId === parent.id ? "删除中..." : "删除" }}
                   </button>
                 </div>
               </div>
-              <p class="comment-content">{{ reply.content }}</p>
+              <p class="comment-content" :class="{ 'comment-content-deleted': isDeletedComment(parent) }">
+                {{ getCommentContent(parent) }}
+              </p>
 
               <form
-                v-if="replyForm.targetId === reply.id"
-                class="comment-reply-form nested-reply-form"
+                v-if="replyForm.targetId === parent.id"
+                class="comment-reply-form"
                 @submit.prevent="submitReply"
               >
                 <div class="comment-editor-head">
@@ -207,10 +132,97 @@
                   </button>
                 </div>
               </form>
+
+              <div v-if="parent.replies.length" class="comment-reply-list">
+                <article v-for="reply in parent.replies" :key="reply.id" class="comment-reply-card">
+                  <div class="comment-card-head">
+                    <div>
+                      <p class="comment-author">{{ reply.nickname || "游客" }}</p>
+                      <p class="comment-time">{{ formatDate(reply.createTime) }}</p>
+                    </div>
+                    <div class="comment-card-actions">
+                      <button
+                        class="link-btn"
+                        type="button"
+                        :disabled="!isLoggedIn"
+                        @click="openReply(reply, parent)"
+                      >
+                        回复
+                      </button>
+                      <button
+                        v-if="canDeleteComment(reply)"
+                        class="danger-link-btn"
+                        type="button"
+                        :disabled="deletingCommentId === reply.id"
+                        @click="handleDeleteComment(reply)"
+                      >
+                        {{ deletingCommentId === reply.id ? "删除中..." : "删除" }}
+                      </button>
+                    </div>
+                  </div>
+                  <p class="comment-content">{{ reply.content }}</p>
+
+                  <form
+                    v-if="replyForm.targetId === reply.id"
+                    class="comment-reply-form nested-reply-form"
+                    @submit.prevent="submitReply"
+                  >
+                    <div class="comment-editor-head">
+                      <div>
+                        <p class="comment-editor-title">回复 @{{ replyForm.targetNickname }}</p>
+                      </div>
+                      <span class="comment-counter">{{ replyForm.content.trim().length }}/1000</span>
+                    </div>
+                    <label class="comment-textarea-wrap">
+                      <span class="sr-only">回复内容</span>
+                      <textarea
+                        v-model="replyForm.content"
+                        maxlength="1000"
+                        rows="3"
+                        placeholder="写下你的回复..."
+                      ></textarea>
+                    </label>
+                    <p v-if="replySubmitError" class="error-msg">{{ replySubmitError }}</p>
+                    <div class="comment-editor-actions">
+                      <button class="ghost-btn" type="button" @click="cancelReply">取消</button>
+                      <button class="submit-btn" type="submit" :disabled="replySubmitting">
+                        {{ replySubmitting ? "提交中..." : "回复" }}
+                      </button>
+                    </div>
+                  </form>
+                </article>
+              </div>
             </article>
           </div>
-        </article>
-      </div>
+        </section>
+      </section>
+
+      <aside class="content-sidebar detail-sidebar">
+        <section class="panel sidebar-panel article-tools-panel">
+          <p class="sidebar-title">阅读辅助</p>
+          <p class="sidebar-copy" v-if="!isLoggedIn">登录后可以生成 AI 总结，快速查看重点。</p>
+          <p class="sidebar-copy" v-else>可在这里生成文章概要，不影响正文阅读。</p>
+          <button
+            class="ghost-btn article-ai-btn"
+            type="button"
+            :disabled="summaryGenerating || !canGenerateSummary"
+            @click="generateSummary"
+          >
+            {{ summaryGenerating ? "生成中..." : "AI 总结" }}
+          </button>
+          <p v-if="summaryErrorMsg" class="error-msg article-ai-feedback">{{ summaryErrorMsg }}</p>
+        </section>
+
+        <section
+          v-if="hasRequestedSummary && (aiSummary || summaryGenerating)"
+          class="panel article-ai-summary-card"
+          aria-live="polite"
+        >
+          <p class="article-ai-summary-eyebrow">AI 总结</p>
+          <p v-if="aiSummary" class="article-ai-summary-content">{{ aiSummary }}</p>
+          <p v-else class="muted">AI 正在整理这篇文章的重点...</p>
+        </section>
+      </aside>
     </section>
 
     <Teleport to="body">

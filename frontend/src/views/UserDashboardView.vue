@@ -1,9 +1,9 @@
 <template>
   <main class="home-page article-home-page">
-    <header class="topbar">
+    <header class="topbar dashboard-topbar">
       <div>
         <p class="eyebrow">Wavelog Blog</p>
-        <h1>用户后台</h1>
+        <h1>用户工作台</h1>
       </div>
       <div class="admin-user-menu" @click.stop>
         <button class="admin-avatar-btn" type="button" :title="displayName" @click="toggleUserMenu">
@@ -17,9 +17,9 @@
       </div>
     </header>
 
-    <section class="hero">
+    <section class="hero hero-plain">
       <h2>{{ greeting }}</h2>
-      <p>你可以管理自己的资料并撰写博客。发布后的文章会进入管理员审核队列。</p>
+      <p>在这里管理文章、查看审核状态和维护个人资料。</p>
     </section>
 
     <section class="panel article-filter-panel">

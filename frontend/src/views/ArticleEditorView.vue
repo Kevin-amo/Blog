@@ -1,14 +1,14 @@
 <template>
   <main class="home-page editor-page">
-    <header class="topbar">
+    <header class="topbar dashboard-topbar">
       <div>
         <p class="eyebrow">Wavelog Blog</p>
-        <h1>{{ isEdit ? "编辑博客" : "新建博客" }}</h1>
+        <h1>{{ isEdit ? "编辑文章" : "新建文章" }}</h1>
       </div>
       <div class="editor-top-actions">
         <button class="ghost-btn" type="button" @click="goBack">返回管理台</button>
         <button class="submit-btn" type="button" :disabled="saving" @click="submitArticle">
-          {{ saving ? "发布中..." : "发布文章" }}
+          {{ saving ? "提交中..." : "保存并提交" }}
         </button>
       </div>
     </header>

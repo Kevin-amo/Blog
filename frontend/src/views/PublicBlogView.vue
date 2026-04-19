@@ -1,51 +1,83 @@
 <template>
-  <main class="home-page public-blog-page">
-    <header class="topbar public-topbar">
-      <div>
+  <main class="home-page public-blog-page site-shell">
+    <header class="site-header">
+      <div class="site-brand">
         <p class="eyebrow">Wavelog Blog</p>
-        <h1>我的博客</h1>
+        <h1>博客</h1>
+        <p class="site-description">记录文章、技术笔记和日常输出，按时间顺序浏览已发布内容。</p>
       </div>
-      <div class="admin-user-menu" @click.stop>
-        <button class="admin-avatar-btn" type="button" :title="avatarTitle" @click="toggleUserMenu">
-          <img v-if="isLoggedIn && user.avatar" :src="user.avatar" alt="用户头像" />
-          <span v-else class="admin-avatar-fallback">{{ avatarFallback }}</span>
-        </button>
-        <div v-if="isLoggedIn && showUserMenu" class="admin-user-dropdown">
-          <button type="button" @click="goToDashboard">进入后台</button>
-          <button type="button" @click="handleLogout">退出登录</button>
+      <div class="site-header-actions">
+        <div class="admin-user-menu" @click.stop>
+          <button class="admin-avatar-btn" type="button" :title="avatarTitle" @click="toggleUserMenu">
+            <img v-if="isLoggedIn && user.avatar" :src="user.avatar" alt="用户头像" />
+            <span v-else class="admin-avatar-fallback">{{ avatarFallback }}</span>
+          </button>
+          <div v-if="isLoggedIn && showUserMenu" class="admin-user-dropdown">
+            <button type="button" @click="goToDashboard">进入后台</button>
+            <button type="button" @click="handleLogout">退出登录</button>
+          </div>
         </div>
       </div>
     </header>
 
-    <section class="hero">
-      <h2>欢迎来到我的文字角落</h2>
-      <p>这里展示已发布文章的预览，点击卡片会在新窗口打开完整内容。</p>
-    </section>
-
-    <section class="panel">
-      <div class="panel-title">最新发布</div>
-      <div v-if="loading" class="muted">正在加载文章...</div>
-      <p v-else-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
-      <div v-else-if="!articles.length" class="empty-state">还没有已发布文章。</div>
-
-      <div v-else class="public-grid">
-        <article
-          v-for="item in articles"
-          :key="item.id"
-          class="public-card"
-          role="button"
-          tabindex="0"
-          @click="openArticle(item.id)"
-          @keydown.enter="openArticle(item.id)"
-        >
-          <h3>{{ item.title }}</h3>
-          <p class="public-item-summary">{{ item.summary || brief(item.content) }}</p>
-          <div class="public-card-foot">
-            <span class="public-item-time">{{ formatDate(item.createTime) }}</span>
-            <button class="submit-btn preview-btn" type="button" @click.stop="openArticle(item.id)">阅读全文</button>
+    <section class="content-layout content-layout-home">
+      <aside class="content-sidebar site-sidebar">
+        <section class="panel sidebar-panel">
+          <p class="sidebar-title">站点说明</p>
+          <p class="sidebar-copy">整体改成更偏内容优先的博客布局，减少装饰，优先保证阅读、检索和进入后台操作的效率。</p>
+        </section>
+        <section class="panel sidebar-panel">
+          <p class="sidebar-title">文章统计</p>
+          <div class="sidebar-stats">
+            <div>
+              <span class="sidebar-stat-value">{{ articles.length }}</span>
+              <span class="sidebar-stat-label">已发布</span>
+            </div>
+            <div>
+              <span class="sidebar-stat-value">{{ isLoggedIn ? '已登录' : '游客' }}</span>
+              <span class="sidebar-stat-label">当前状态</span>
+            </div>
           </div>
-        </article>
-      </div>
+        </section>
+      </aside>
+
+      <section class="content-main">
+        <section class="panel list-panel">
+          <div class="section-head">
+            <div>
+              <p class="panel-title">最新发布</p>
+              <p class="muted">共 {{ articles.length }} 篇文章</p>
+            </div>
+          </div>
+
+          <div v-if="loading" class="muted">正在加载文章...</div>
+          <p v-else-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
+          <div v-else-if="!articles.length" class="empty-state">还没有已发布文章。</div>
+
+          <div v-else class="article-feed">
+            <article
+              v-for="item in articles"
+              :key="item.id"
+              class="article-list-item"
+              role="button"
+              tabindex="0"
+              @click="openArticle(item.id)"
+              @keydown.enter="openArticle(item.id)"
+            >
+              <div class="article-list-main">
+                <h3>{{ item.title }}</h3>
+                <p class="article-list-summary">{{ item.summary || brief(item.content) }}</p>
+                <div class="article-list-meta">
+                  <span>{{ formatDate(item.createTime) }}</span>
+                </div>
+              </div>
+              <div class="article-list-side">
+                <button class="ghost-btn preview-btn" type="button" @click.stop="openArticle(item.id)">阅读全文</button>
+              </div>
+            </article>
+          </div>
+        </section>
+      </section>
     </section>
   </main>
 </template>

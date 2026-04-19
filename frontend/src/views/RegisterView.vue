@@ -1,20 +1,17 @@
 <template>
-  <main class="auth-page">
-    <div class="bg-orb orb-a"></div>
-    <div class="bg-orb orb-b"></div>
-
-    <section class="auth-card">
-      <aside class="auth-intro">
+  <main class="auth-page auth-page-plain">
+    <section class="auth-card auth-card-plain">
+      <aside class="auth-intro auth-intro-plain">
         <p class="eyebrow">Wavelog Blog</p>
-        <h1>创建你的账号，开始写作旅程。</h1>
+        <h1>账号注册</h1>
         <p class="intro-text">
-          注册后你就可以登录管理后台，发布文章、维护内容，构建属于你的博客空间。
+          创建账号后即可进入后台，撰写文章并管理内容。
         </p>
       </aside>
 
-      <section class="auth-form-wrap">
-        <h2>账号注册</h2>
-        <p class="sub">仅需几步，马上开始创作</p>
+      <section class="auth-form-wrap auth-form-wrap-plain">
+        <h2>注册</h2>
+        <p class="sub">填写必要信息创建账号</p>
 
         <form class="auth-form" @submit.prevent="handleRegister">
           <label>
@@ -61,7 +58,7 @@
           <p v-if="successMsg" class="success-msg">{{ successMsg }}</p>
 
           <button :disabled="loading" type="submit" class="submit-btn">
-            {{ loading ? "注册中..." : "立即注册" }}
+            {{ loading ? "注册中..." : "注册" }}
           </button>
 
           <p class="auth-switch">

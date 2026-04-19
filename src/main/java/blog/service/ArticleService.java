@@ -42,6 +42,14 @@ public interface ArticleService {
     List<ArticleVO> listPublished(ArticleQueryDTO queryDTO);
 
     /**
+     * 分页查询已发布文章列表。
+     *
+     * @param queryDTO 查询参数
+     * @return 已发布文章分页结果
+     */
+    PageResult<ArticleVO> pagePublished(ArticlePageQueryDTO queryDTO);
+
+    /**
      * 查询当前用户的文章详情。
      *
      * @param id 文章ID

@@ -55,6 +55,12 @@ public class ArticleController {
         return Result.success(articleService.listPublished(queryDTO));
     }
 
+    @GetMapping("/public/page")
+    @Operation(summary = "分页查询已发布文章列表（公开）")
+    public Result<PageResult<ArticleVO>> publicPage(ArticlePageQueryDTO queryDTO) {
+        return Result.success(articleService.pagePublished(queryDTO));
+    }
+
     @GetMapping("/{id}")
     @Operation(summary = "查询文章详情")
     public Result<ArticleVO> detail(@PathVariable Long id) {

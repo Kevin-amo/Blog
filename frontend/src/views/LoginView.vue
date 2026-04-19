@@ -1,20 +1,17 @@
 ﻿<template>
-  <main class="auth-page">
-    <div class="bg-orb orb-a"></div>
-    <div class="bg-orb orb-b"></div>
-
-    <section class="auth-card">
-      <aside class="auth-intro">
+  <main class="auth-page auth-page-plain">
+    <section class="auth-card auth-card-plain">
+      <aside class="auth-intro auth-intro-plain">
         <p class="eyebrow">Wavelog Blog</p>
-        <h1>写下你的灵感，分享你的世界。</h1>
+        <h1>账号登录</h1>
         <p class="intro-text">
-          这里是你的创作港湾。登录后，你可以管理博客、查看个人信息，并持续完善你的内容创作空间。
+          登录后进入后台，进行文章管理、资料维护和内容发布。
         </p>
       </aside>
 
-      <section class="auth-form-wrap">
-        <h2>欢迎回来</h2>
-        <p class="sub">登录后进入你的博客控制台</p>
+      <section class="auth-form-wrap auth-form-wrap-plain">
+        <h2>登录</h2>
+        <p class="sub">输入账号信息继续</p>
 
         <form class="auth-form" @submit.prevent="handleLogin">
           <label>
@@ -41,12 +38,12 @@
           <p v-if="errorMsg" class="error-msg">{{ errorMsg }}</p>
 
           <button :disabled="loading" type="submit" class="submit-btn">
-            {{ loading ? "登录中..." : "立即登录" }}
+            {{ loading ? "登录中..." : "登录" }}
           </button>
 
           <p class="auth-switch">
             还没有账号？
-            <RouterLink to="/register">立即注册</RouterLink>
+            <RouterLink to="/register">去注册</RouterLink>
           </p>
         </form>
       </section>
